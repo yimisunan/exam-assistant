@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.3.0 (极致瘦身版)</title>
+    <title>考试助手 V0.3.1 (极致瘦身版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -540,6 +540,40 @@
     const UNLOCK_PRE = { 'easy': null, 'normal': 'easy', 'hard': 'normal', 'extreme': 'hard' };
     const PRE_NAMES = { 'easy': '简单', 'normal': '普通', 'hard': '困难', 'extreme': '极限' };
 
+    // --- 极简假数据工厂 (为沙盒省去大量重复对象结构) ---
+    const mockQ = (i, mat) => ({ id: "mq_"+i+"_"+Date.now(), question: mat ? "[材料原文：这是一段沙盒自动生成的测试材料。]\n针对该材料的子题考法？" : `[沙盒] 独立测试题 ${i}`, options: {A:"甲", B:"乙", C:"丙", D:"丁"}, answer: "A", type: "single", source: "沙盒引擎" });
+
+    // --- 沙盒测试引擎 (高密度优化版) ---
+    const SandboxEngine = {
+        toggleTestMode: function() {
+            if (!isTestMode) {
+                let totalQ = 0; for (let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) totalQ += banks[id].data.length; }
+                if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) return alert("⚠️ 请在【0题库、0进度】的纯净状态下开启沙盒。");
+                SafeStorage.set('exam_test_mode', 'true'); alert("🔧 沙盒激活！"); location.reload();
+            } else { banks = ensureSystemBanks({}); globalStats = ensureGlobalStats(null); saveBanks(true); saveGlobalStats(true); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false); SafeStorage.set('exam_test_mode', 'false'); alert("✅ 已退出并恢复纯净环境！"); location.reload(); }
+        },
+        injectProfessorTutorData: function() {
+            let q1 = mockQ(1, true), q2 = mockQ(2, false); q2.answer = "B";
+            banks['sys_wrong'].data.push(q1, q2); saveBanks(); renderBankList();
+            $('tutor-input').value = JSON.stringify([
+                { original_question: q1.question, my_answer: "B", correct_answer: "A", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "依据原文" },
+                { original_question: q2.question, my_answer: "A", correct_answer: "B", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "未检索" }
+            ], null, 2); Router.openTutorPage(); generateTutorCards();
+        },
+        unlockAllArenas: function() {
+            banks['test_arena_' + Date.now()] = { name: "🧪 竞技解锁库 (700题)", data: Array.from({length: 700}, (_, i) => mockQ(i)), completed: false, maxRate: 0 };
+            globalStats.totalCorrect += 500; globalStats.totalAnswered += 600; globalStats.challenge = { easy:1, normal:1, hard:1, extreme:0 };
+            saveBanks(true); saveGlobalStats(); renderBankList(); alert("✅ 全难度竞技场及700假题库已注入！");
+        },
+        injectBanks: function() { banks['test_100_' + Date.now()] = { name: "🧪 100题容量库", data: Array.from({length: 100}, (_, i) => mockQ(i)), completed: false, maxRate: 0 }; saveBanks(); renderBankList(); alert("✅ 100题库注入完成"); },
+        injectWrongAndStar: function() { banks['sys_wrong'].data.push(...Array.from({length: 20}, (_, i) => mockQ(i))); banks['sys_star'].data.push(...Array.from({length: 20}, (_, i) => mockQ(i))); saveBanks(); renderBankList(); alert("✅ 各20道错题与收藏注入完成"); },
+        mockInterruptState: function() { SafeStorage.set('exam_state', JSON.stringify({ bankId: 'test_bank', current: 15, score: 8, mode: 'instant', wrongList: [], stars: [], isAnswered: false, selected: [], activeData: Array.from({length: 30}, (_, i) => mockQ(i)), timerMode: true, timeRemaining: 1500, optShuffle: false })); alert("✅ 中断存档伪造完成，请刷新页面查看"); location.reload(); },
+        jumpToResult: function() { App.data = new Array(20).fill({}); App.score = 8; App.wrongList = Array.from({length: 12}, (_, i) => ({ id: "wq_"+i, q: `假错题 ${i}`, options: {A:"甲", B:"乙"}, source: "沙盒", my: "B", right: "A", reason: "错" })); App.isChallenge = false; App.bankId = 'test_bank'; App.isSystemBank = false; showResult(); },
+        triggerRedDot: function() { setNeedSync(true); alert("🔴 同步红点已强制点亮！"); },
+        triggerEpicModal: function() { showEpicModal("史诗弹窗测试", "这是一段用于测试史诗成就UI的描述文字。"); },
+        resetAllStatsFlow: function() { SysModal.show("🔥 危险：清除进度", "将清空所有大盘及系统题库", true, () => { globalStats = ensureGlobalStats(null); banks['sys_wrong'].data = []; banks['sys_star'].data = []; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } } saveBanks(true); saveGlobalStats(); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false); alert("✅ 重置完成"); location.reload(); }); }
+    };
+
     window.onload = function() { 
         renderBankList(); updateDashboard(); initUIState(); applyFoldState(); applyQuizSettingsState(); setNeedSync(needSync); 
         let savedToken = SafeStorage.get('exam_github_token'); if(savedToken) $('github-token-input').value = savedToken; 
@@ -591,27 +625,6 @@
             } else { el.classList.remove('locked-mode'); msgEl.innerText = ''; }
         });
     }
-
-    const SandboxEngine = {
-        toggleTestMode: function() {
-            if (!isTestMode) { let totalQ = 0; for (let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) totalQ += banks[id].data.length; }
-                if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) return alert("⚠️ 无法开启测试模式！\n\n测试模式仅能在【0题库、0进度】纯净状态下开启。");
-                SafeStorage.set('exam_test_mode', 'true'); alert("🔧 沙盒激活！"); location.reload();
-            } else { banks = ensureSystemBanks({}); globalStats = ensureGlobalStats(null); saveBanks(true); saveGlobalStats(true); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false); SafeStorage.set('exam_test_mode', 'false'); alert("✅ 已退出测试模式并恢复纯净环境！"); location.reload(); }
-        },
-        injectProfessorTutorData: function() {
-            let mockQ1 = { id: "tq1_"+Date.now(), question: "[材料原文：测试]\n考法？", options: {A:"甲", B:"乙"}, answer: "B", type: "single", source: "沙盒" };
-            let mockQ2 = { id: "tq2_"+Date.now(), question: "独立题？", options: {A:"甲", B:"乙"}, answer: "A", type: "single", source: "沙盒" };
-            banks['sys_wrong'].data.push(mockQ1); banks['sys_wrong'].data.push(mockQ2); saveBanks(); renderBankList();
-            let mockJSON = [{ original_question: mockQ1.question, my_answer: "A", correct_answer: "B", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "原文" }, { original_question: mockQ2.question, my_answer: "B", correct_answer: "A", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "未检索" }];
-            $('tutor-input').value = JSON.stringify(mockJSON, null, 2); Router.openTutorPage(); generateTutorCards();
-        },
-        unlockAllArenas: function() { let dummyData = []; for(let i=0; i<700; i++) { dummyData.push({question: `[沙盒] 假题 ${i}_${Date.now()}`, options: {A:"A", B:"B"}, answer: "A", type: "single", source: "沙盒"}); } banks['test_arena_' + Date.now()] = { name: "🧪 竞技解锁库", data: dummyData, completed: false, maxRate: 0 }; globalStats.totalCorrect += 500; globalStats.totalAnswered += 600; globalStats.challenge = { easy:1, normal:1, hard:1, extreme:0 }; saveBanks(true); saveGlobalStats(); renderBankList(); alert("✅ 全难度竞技场解锁！"); },
-        injectWrongAndStar: function() { alert("✅ 注入完成"); }, mockInterruptState: function() { alert("✅ 注入完成"); },
-        jumpToResult: function() { App.data = new Array(20).fill({}); App.score = 8; App.wrongList = []; for(let i=1; i<=12; i++) { App.wrongList.push({ id: "wq_"+i, q: `假错题 ${i}`, options: {A:"甲", B:"乙"}, source: "沙盒", my: "B", right: "A", reason: "错" }); } App.isChallenge = false; App.bankId = 'test_bank'; App.isSystemBank = false; showResult(); },
-        injectBanks: function() { alert("✅ 注入完成"); }, triggerRedDot: function() { setNeedSync(true); alert("🔴 强制点亮！"); }, triggerEpicModal: function() { showEpicModal("史诗弹窗", "测试文字"); },
-        resetAllStatsFlow: function() { SysModal.show("🔥 危险：清除进度", "将清空所有大盘及系统题库", true, () => { globalStats = ensureGlobalStats(null); banks['sys_wrong'].data = []; banks['sys_star'].data = []; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } } saveBanks(true); saveGlobalStats(); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false); alert("✅ 重置完成"); location.reload(); }); }
-    };
 
     function showEpicModal(title, desc) { $('epic-modal').classList.remove('hidden'); $('epic-title').innerText = title; $('epic-desc').innerText = desc; }
     function epicCloudBackupFlow() { $('epic-modal').classList.add('hidden'); if(isTestMode) return alert("⛔ 沙盒严禁上传！"); let token = $('github-token-input').value.trim(); if(!token) return alert("请填写 GitHub 密钥"); executeCloudBackup(token); }
