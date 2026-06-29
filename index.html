@@ -1,277 +1,397 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.3.0</title>
-    <link rel="stylesheet" href="style.css?v=999">
+    <title>考试助手 V0.3.1 (单文件终极版)</title>
+    <style>
+    /* 核心样式极简压缩 */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h2 { font-size: 17px; font-weight: 800; color: #0f172a; margin-bottom: 16px; position: relative; padding-left: 12px; }
+    h2::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 4px; background: #3b82f6; border-radius: 4px; }
+    textarea, input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; margin-bottom: 14px; background: #ffffff; color: #1e293b; outline: none; transition: all 0.2s; font-weight: 500;}
+    textarea:focus, input:focus, select:focus { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,0.1); }
+    textarea { height: 110px; resize: none; }
+    .btn { display: inline-flex; justify-content: center; align-items: center; width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; background: #ffffff; color: #475569; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; user-select: none; }
+    .btn:active:not(:disabled) { transform: scale(0.96); background: #f8fafc; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
+    .btn-danger { color: #ef4444; border-color: #fca5a5; background: #fef2f2; }
+    .btn-warning { color: #d97706; border-color: #fde68a; background: #fffbeb; }
+    .hidden { display: none !important; }
+    .flex-row { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
+    .flex-row > * { margin-bottom: 0; }
+    .flex-row input, .flex-row select { flex: 1; }
+    .main-header { display: flex; align-items: center; padding: 14px 18px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 16px; }
+    .hamburger-btn { font-size: 22px; cursor: pointer; color: #3b82f6; margin-right: 16px; }
+    .main-title { font-size: 18px; font-weight: 800; color: #1e293b; flex: 1; }
+    .side-drawer { position: fixed; top: 0; left: -100%; width: 88%; max-width: 340px; height: 100vh; background: #f4f6f8; z-index: 10000; overflow-y: auto; transition: left 0.4s; padding: 20px 12px; box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
+    .side-drawer.open { left: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+    .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+    .fold-wrapper { background: #ffffff; border-radius: 16px; margin-bottom: 16px; border: 2px solid #e2e8f0; overflow: hidden; }
+    .fold-header { padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff; user-select: none; }
+    .fold-title { font-size: 17px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;}
+    .fold-meta { font-size: 13px; color: #64748b; background: #f1f5f9; padding: 4px 10px; border-radius: 20px;}
+    .fold-icon { font-size: 14px; color: #94a3b8; transition: transform 0.3s; }
+    .fold-wrapper.open .fold-icon { transform: rotate(180deg); }
+    .fold-wrapper.open .fold-header { border-bottom: 2px dashed #e2e8f0; background: #fcfcfc;}
+    .fold-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.3s; }
+    .fold-wrapper.open .fold-content { grid-template-rows: 1fr; }
+    .fold-inner { overflow: hidden; }
+    .fold-inner-padding { padding: 20px; }
+    .dashboard-card { background: linear-gradient(135deg, #f8fafc, #eff6ff); border: 2px solid #e0e7ff; padding: 16px; border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-around; text-align: center; }
+    .dash-num { font-size: 24px; font-weight: 900; color: #1e40af; }
+    .dash-label { font-size: 12px; color: #64748b; font-weight: 700; margin-top: 4px; }
+    .honor-board { background: #fffcf0; border: 2px solid #fef08a; padding: 14px; border-radius: 16px; margin-bottom: 24px; display: flex; justify-content: space-around; text-align: center; }
+    .honor-num { font-size: 20px; font-weight: 900; }
+    .honor-label { font-size: 11px; font-weight: 800; margin-top: 4px; }
+    .arena-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .arena-card { padding: 18px 16px; border-radius: 16px; cursor: pointer; color: #fff; position: relative; display: flex; flex-direction: column; justify-content: space-between;}
+    .arena-easy { background: linear-gradient(135deg, #10b981, #059669); }
+    .arena-normal { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .arena-hard { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .arena-extreme { background: linear-gradient(135deg, #0f172a, #000000); border: 2px solid #fbbf24; }
+    .locked-mode { filter: grayscale(1) opacity(0.6); cursor: not-allowed; }
+    .lock-msg { font-size: 11px; font-weight: 800; margin-top: 10px; padding-top: 8px; border-top: 2px dashed rgba(255,255,255,0.3); }
+    .bank-item { background: #ffffff; border: 2px solid #e2e8f0; padding: 18px 16px; border-radius: 16px; margin-bottom: 14px; position: relative; }
+    .bank-header-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .bank-title { font-size: 16px; font-weight: 800; flex: 1; }
+    .bank-delete-text { font-size: 13px; color: #ef4444; font-weight: 800; cursor: pointer; padding: 6px 10px; background: #fef2f2; border-radius: 8px; }
+    .bank-meta-row { display: flex; gap: 10px; margin-bottom: 14px; }
+    .bank-meta-tag { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 8px; font-weight: 700; }
+    .bank-sys-wrong { border-color: #fca5a5; background: #fef2f2; }
+    .bank-sys-star { border-color: #fde047; background: #fffdf5; }
+    .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0;}
+    .nav-btn { font-size: 15px; color: #64748b; cursor: pointer; padding: 8px 12px; font-weight: 800; background: #f1f5f9; border-radius: 10px; }
+    .nav-title { font-size: 17px; font-weight: 900; }
+    .bookmark-btn.active { background: #f59e0b; color: white; border-color: #f59e0b;}
+    .progress-wrapper { background: #e2e8f0; height: 10px; border-radius: 5px; width: 100%; margin-bottom: 20px; overflow: hidden; }
+    .progress-fill { background: linear-gradient(90deg, #34d399, #10b981); height: 100%; width: 0%; transition: width 0.3s; }
+    .timer-badge { display: inline-block; font-size: 15px; color: #ef4444; font-weight: 800; margin-bottom: 20px; background: #fef2f2; padding: 6px 16px; border-radius: 12px; border: 2px solid #fca5a5; width: 100%; text-align: center; }
+    .question-title { font-size: 18px; font-weight: 800; line-height: 1.6; margin-bottom: 24px; white-space: pre-wrap; }
+    .badge { background: #dbeafe; color: #1d4ed8; padding: 4px 10px; border-radius: 8px; font-size: 13px; margin-right: 8px; }
+    .opt-btn { display: flex; width: 100%; padding: 16px; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 16px; margin-bottom: 14px; font-size: 16px; font-weight: 700; cursor: pointer; align-items: flex-start; }
+    .opt-btn.selected { background: #eff6ff; border-color: #3b82f6; }
+    .opt-btn.correct { background: #f0fdf4; border-color: #10b981; color: #065f46; }
+    .opt-btn.wrong { background: #fef2f2; border-color: #ef4444; color: #991b1b; text-decoration: line-through;}
+    .feedback-box { margin-bottom: 24px; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 800; text-align: center; }
+    .tutor-card { background: #ffffff; border: 2px solid #e0f2fe; border-radius: 24px; padding: 24px 20px; margin-bottom: 24px; }
+    .tutor-q { font-size: 17px; font-weight: 800; margin-bottom: 16px; white-space: pre-wrap; }
+    .tutor-exp-box { background: #f0fdfa; border-radius: 18px; padding: 18px; border: 2px solid #ccfbf1; margin-top: 24px; }
+    .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.8); z-index: 99999; display: flex; justify-content: center; align-items: center; }
+    .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 24px; padding: 28px; text-align: center; }
+    .sys-modal-title { font-size: 20px; font-weight: 900; margin-bottom: 14px; }
+    .material-box { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 24px; }
+    .chunk-box { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+    </style>
 </head>
 <body>
 
+    <!-- 侧滑抽屉 -->
     <div id="drawer-overlay" class="drawer-overlay" onclick="closeDrawer()"></div>
     <div id="side-drawer" class="side-drawer">
-        <div class="drawer-title">⚙️ 控制面板</div>
-
-        <div class="fold-wrapper" style="border-color: #3b82f6; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15); cursor: pointer; transform: scale(1.02); margin-bottom: 24px;" onclick="Router.openTutorPage()">
-            <div class="fold-header" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-bottom: none;">
-                <div class="fold-title" style="color: #1d4ed8; font-size: 18px;">👩‍🏫 错题导师 <span class="fold-meta" style="background: #3b82f6; color: white; border-radius: 8px;">专属沉浸屏</span></div>
-                <div class="fold-icon" style="color: #1d4ed8; font-size: 16px;">〉</div>
-            </div>
+        <div style="font-size: 22px; font-weight: 900; margin-bottom: 24px;">⚙️ 控制面板</div>
+        
+        <div class="fold-wrapper" style="border-color: #3b82f6;" onclick="Router.navigate('page-tutor'); closeDrawer();">
+            <div class="fold-header" style="background: #eff6ff;"><div class="fold-title" style="color: #1d4ed8;">👩‍🏫 错题导师</div><div class="fold-icon">〉</div></div>
         </div>
 
         <div class="fold-wrapper" id="fold-tools">
-            <div class="fold-header" onclick="toggleFold('fold-tools')">
-                <div class="fold-title">云端与题库 <span class="fold-meta" id="mini-stats-1">加载中...</span><span id="sync-dot-header" class="sync-alert-badge hidden">需同步!</span></div>
-                <div class="fold-icon">▼</div>
-            </div>
+            <div class="fold-header" onclick="toggleFold('fold-tools')"><div class="fold-title">云端与题库 <span id="sync-dot-header" class="hidden" style="color:red; font-size:12px; font-weight:900;">[需同步]</span></div><div class="fold-icon">▼</div></div>
             <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
                 <div class="dashboard-card">
                     <div class="dash-item"><div class="dash-num" id="global-total-q">0</div><div class="dash-label">全库题数</div></div>
-                    <div class="dash-divider"></div>
-                    <div class="dash-item"><div class="dash-num" id="global-total-ans" style="color: #059669;">0</div><div class="dash-label">累计答题</div></div>
-                    <div class="dash-divider"></div>
-                    <div class="dash-item"><div class="dash-num" id="global-total-cor" style="color: #f59e0b;">0</div><div class="dash-label">累计答对</div></div>
+                    <div class="dash-item"><div class="dash-num" id="global-total-ans">0</div><div class="dash-label">累计答题</div></div>
+                    <div class="dash-item"><div class="dash-num" id="global-total-cor">0</div><div class="dash-label">累计答对</div></div>
                 </div>
-                <div id="import-section-collapsed">
-                    <button class="btn btn-primary" onclick="showImportSection()" style="margin-top: 10px; background: #e0e7ff; color: #1e40af; border: none; box-shadow: none;">[ + ] 添加新题库</button>
+                <button class="btn btn-primary" onclick="document.getElementById('import-section').classList.toggle('hidden')">[ + ] 管理题库</button>
+                <div id="import-section" class="hidden">
+                    <textarea id="data-input" placeholder="请粘贴 JSON 格式题库代码..."></textarea>
+                    <input type="text" id="new-bank-name" placeholder="新题库名称">
+                    <button class="btn btn-primary" onclick="saveNewBank()">保存为新库</button>
                 </div>
-                <div id="import-section-expanded" class="hidden">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h2 style="margin:0;">导入新题库</h2>
-                        <span style="font-size: 13px; color: #64748b; font-weight:800; cursor: pointer;" onclick="hideImportSection()">收起 ▲</span>
-                    </div>
-                    <textarea id="data-input" placeholder="请粘贴 JSON 格式的题库代码..."></textarea>
-                    <div class="flex-row">
-                        <input type="text" id="new-bank-name" placeholder="题库名称 (如: 2026年真题)">
-                        <button class="btn btn-primary" onclick="saveNewBank()">保存题库</button>
-                    </div>
-                    <div class="flex-row">
-                        <select id="exist-bank-select"></select>
-                        <button class="btn" onclick="appendToBank()">追加题目</button>
-                    </div>
-                </div>
-                <h2 style="margin-top: 24px;">云端漫游存档</h2>
-                <input type="password" id="github-token-input" placeholder="输入 GitHub 密钥 (ghp_ 开头)">
+                <h2 style="margin-top:20px;">数据管理</h2>
                 <div class="flex-row">
-                    <button class="btn btn-primary" id="btn-cloud-backup" onclick="cloudBackupFlow()" style="position:relative;">⬆️ 备份全状态 <span id="sync-dot-btn" class="sync-alert-btn hidden">待备份</span></button>
-                    <button class="btn btn-warning" id="btn-cloud-restore" onclick="cloudRestoreFlow()">⬇️ 强制云覆盖</button>
-                </div>
-                <div style="font-size: 13px; color: #94a3b8; text-align:center; font-weight: 700;">
-                    离线工具：<a href="#" onclick="exportLocalData()" style="color:#3b82f6; text-decoration:none;">下载备份</a> | <a href="#" onclick="document.getElementById('import-file').click()" style="color:#3b82f6; text-decoration:none;">导入备份</a>
+                    <button class="btn btn-primary" onclick="exportLocalData()">下载离线备份</button>
+                    <button class="btn btn-warning" onclick="document.getElementById('import-file').click()">导入本地存档</button>
                 </div>
                 <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importLocalData(event)">
             </div></div></div>
         </div>
 
         <div class="fold-wrapper" id="fold-sys" style="border-color: #6ee7b7;">
-            <div class="fold-header" onclick="toggleFold('fold-sys')" style="background: #ecfdf5;">
-                <div class="fold-title" style="color: #047857;">🎯 专项特训 <span class="fold-meta" id="mini-stats-sys" style="background: #d1fae5; color: #065f46;">加载中...</span></div>
-                <div class="fold-icon" style="color: #047857;">▼</div>
-            </div>
-            <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
-                <p style="font-size:13px; color:#065f46; margin-bottom:16px; font-weight:700; text-align:center; background:#d1fae5; padding:10px; border-radius:10px;">💡 自动收录您的易错点与星标题，答对错题自动核销。</p>
-                <div id="sys-bank-list"></div>
-            </div></div></div>
+            <div class="fold-header" onclick="toggleFold('fold-sys')"><div class="fold-title" style="color: #047857;">🎯 专项特训</div><div class="fold-icon">▼</div></div>
+            <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding"><div id="sys-bank-list"></div></div></div></div>
         </div>
 
         <div class="fold-wrapper" id="fold-arena" style="border-color: #fcd34d;">
-            <div class="fold-header" onclick="toggleFold('fold-arena')" style="background: #fffbeb;">
-                <div class="fold-title" style="color: #d97706;">⚔️ 终极竞技场 <span class="fold-meta" id="mini-stats-2" style="background: #fef3c7; color: #b45309;">荣誉加载中...</span></div>
-                <div class="fold-icon" style="color: #d97706;">▼</div>
-            </div>
+            <div class="fold-header" onclick="toggleFold('fold-arena')"><div class="fold-title" style="color: #d97706;">⚔️ 终极竞技场</div><div class="fold-icon">▼</div></div>
             <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
-                <p style="font-size:13px; color:#b45309; margin-bottom:16px; font-weight:700; text-align:center; background:#fef3c7; padding:10px; border-radius:10px;">💡 智能引擎提示：竞技场抽题将【优先抓取】错题本与收藏夹内容进行弱点强化。</p>
                 <div class="honor-board">
-                    <div class="honor-item" style="color:#059669;"><div class="honor-num" id="honor-easy">0</div><div class="honor-label">简单过关</div></div>
-                    <div class="honor-item" style="color:#2563eb;"><div class="honor-num" id="honor-normal">0</div><div class="honor-label">普通过关</div></div>
-                    <div class="honor-item" style="color:#7c3aed;"><div class="honor-num" id="honor-hard">0</div><div class="honor-label">困难过关</div></div>
-                    <div class="honor-item" style="color:#d97706;"><div class="honor-num" id="honor-extreme">0</div><div class="honor-label">极限登顶</div></div>
+                    <div><div class="honor-num" id="h-easy">0</div><div class="honor-label">简单</div></div>
+                    <div><div class="honor-num" id="h-norm">0</div><div class="honor-label">普通</div></div>
+                    <div><div class="honor-num" id="h-hard">0</div><div class="honor-label">困难</div></div>
+                    <div><div class="honor-num" id="h-extr">0</div><div class="honor-label">极限</div></div>
                 </div>
                 <div class="arena-grid">
-                    <div class="arena-card arena-easy" id="arena-easy" onclick="startChallenge('easy')">
-                        <div><h3>简单模式</h3><p>随机 10 题<br>小试牛刀</p></div><span class="lock-msg" id="lock-msg-easy"></span>
-                    </div>
-                    <div class="arena-card arena-normal" id="arena-normal" onclick="startChallenge('normal')">
-                        <div><h3>普通模式</h3><p>随机 30 题<br>中度抗压</p></div><span class="lock-msg" id="lock-msg-normal"></span>
-                    </div>
-                    <div class="arena-card arena-hard" id="arena-hard" onclick="startChallenge('hard')">
-                        <div><h3>困难模式</h3><p>随机 60 题<br>毅力考验</p></div><span class="lock-msg" id="lock-msg-hard"></span>
-                    </div>
-                    <div class="arena-card arena-extreme" id="arena-extreme" onclick="startChallenge('extreme')">
-                        <div><h3>极限模式</h3><p>随机 90 题<br>限时 90 分钟</p></div><span class="lock-msg" id="lock-msg-extreme"></span>
-                    </div>
+                    <div class="arena-card arena-easy" id="arena-easy" onclick="startChallenge('easy')"><h3>简单</h3><span class="lock-msg" id="lm-easy"></span></div>
+                    <div class="arena-card arena-normal" id="arena-normal" onclick="startChallenge('normal')"><h3>普通</h3><span class="lock-msg" id="lm-normal"></span></div>
+                    <div class="arena-card arena-hard" id="arena-hard" onclick="startChallenge('hard')"><h3>困难</h3><span class="lock-msg" id="lm-hard"></span></div>
+                    <div class="arena-card arena-extreme" id="arena-extreme" onclick="startChallenge('extreme')"><h3>极限</h3><span class="lock-msg" id="lm-extreme"></span></div>
                 </div>
             </div></div></div>
         </div>
-
-        <div class="fold-wrapper" id="fold-dev" style="border-color: #fecaca; margin-top: 40px;">
-            <div class="fold-header" onclick="toggleFold('fold-dev')" style="background: #fef2f2;">
-                <div class="fold-title" style="color: #dc2626;">🛠️ 开发者选项</div>
-                <div class="fold-icon" style="color: #dc2626;">▼</div>
-            </div>
+        
+        <div class="fold-wrapper" id="fold-dev" style="border-color: #fecaca; margin-top:20px;">
+            <div class="fold-header" onclick="toggleFold('fold-dev')"><div class="fold-title" style="color: #dc2626;">🛠️ 开发者选项</div><div class="fold-icon">▼</div></div>
             <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
-                <h3 style="font-size: 15px; color: #1e293b; margin-bottom: 10px; font-weight:800;">🧪 实验性功能 (Beta)</h3>
-                <div class="controls" style="background: #ffffff; border-color: #e2e8f0; margin-bottom: 24px;">
-                    <label><input type="checkbox" id="opt-shuffle-cb"> 强制选项乱序 (防背与防幻觉双擎激活)</label>
-                </div>
-                <h3 style="font-size: 15px; color: #1e293b; margin-bottom: 10px; font-weight:800;">🚧 沙盒测试环境</h3>
-                <button class="btn btn-warning" id="test-mode-toggle-btn" onclick="SandboxEngine.toggleTestMode()">开启测试模式</button>
-                <p style="font-size: 13px; color: #64748b; margin-top: 6px; margin-bottom: 24px; font-weight:600;">需在纯净态下开启，开启后强制禁用云端。</p>
-                <h3 style="font-size: 15px; color: #991b1b; margin-bottom: 10px; font-weight:800;">🔥 危险操作</h3>
-                <button class="btn btn-danger" onclick="SandboxEngine.resetAllStatsFlow()">一键重置所有进度与大盘</button>
-                <p style="font-size: 13px; color: #ef4444; margin-top: 6px; font-weight:600;">注意：此操作将清空所有累计数据、荣誉及100%打卡印章，且不可逆。</p>
+                <label style="display:block; margin-bottom:10px;"><input type="checkbox" id="opt-shuffle-cb"> 强制选项乱序</label>
+                <button class="btn btn-warning" onclick="SandboxEngine.toggleTestMode()">测试模式开关</button>
+                <button class="btn btn-danger" onclick="SandboxEngine.resetAllStatsFlow()">核爆重置清空</button>
             </div></div></div>
         </div>
     </div>
 
+    <!-- 页面: 主页 -->
     <div id="page-home" class="container">
-        <div class="main-header">
-            <div class="hamburger-btn" onclick="openDrawer()">☰</div>
-            <div class="main-title">考试助手</div>
-            <span id="sync-dot-global" class="sync-alert-badge hidden">需同步!</span>
-        </div>
-
-        <div id="recovery-banner" class="hidden" style="background: #eff6ff; border: 2px dashed #3b82f6; padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);">
-            <div style="font-size: 17px; font-weight: 900; color: #1e40af; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">📋 发现未处理完毕的战报快照</div>
-            <p style="font-size: 14px; color: #3b82f6; margin-bottom: 16px; text-align: center; font-weight: 700;">上次练习的错题提取进程被意外中断。<br>快照已为您安全驻留，是否立即恢复？</p>
-            <div class="flex-row" style="justify-content: center; gap: 12px; margin-bottom: 0;">
-                <button class="btn btn-primary" style="margin-bottom: 0; padding: 12px 24px; border-radius: 12px;" onclick="restoreLastReport()">⚡ 立即恢复战场</button>
-                <button class="btn" style="margin-bottom: 0; padding: 12px 24px; background: #fff; border-color: #bfdbfe; color: #60a5fa; border-radius: 12px;" onclick="dismissLastReport()">清除并忽略</button>
-            </div>
-        </div>
-
+        <div class="main-header"><div class="hamburger-btn" onclick="openDrawer()">☰</div><div class="main-title">考试助手 V0.3.1</div></div>
         <div class="test-console hidden" id="test-console">
-            <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
-            <p style="font-size:13px; color:#b45309; margin-bottom:14px; font-weight:700;">高级开发者专属武器库，请点击以快速验证系统极端边界。</p>
+            <div class="tc-title">🚧 沙盒测试终端</div>
             <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                <button class="tc-btn" onclick="SandboxEngine.injectBanks()">+ 注入 100 题容量库</button>
-                <button class="tc-btn" onclick="SandboxEngine.triggerRedDot()">🔴 点亮同步警示</button>
-                <button class="tc-btn" onclick="SandboxEngine.triggerEpicModal()">🏆 触发史诗弹窗</button>
-                <button class="tc-btn" onclick="SandboxEngine.unlockAllArenas()" style="border-color:#10b981; color:#047857; background:#ecfdf5;">🏆 一键解锁全难度竞技场</button>
-                <button class="tc-btn" onclick="SandboxEngine.injectWrongAndStar()" style="border-color:#f43f5e; color:#be123c; background:#fff1f2;">💔 注入 20 道易错/收藏题</button>
-                <button class="tc-btn" onclick="SandboxEngine.mockInterruptState()" style="border-color:#8b5cf6; color:#6d28d9; background:#f5f3ff;">💾 伪造答题中断存档</button>
-                <button class="tc-btn" onclick="SandboxEngine.jumpToResult()" style="border-color:#f59e0b; color:#b45309; background:#fffbeb;">📊 直接跳转结算战报页</button>
-                <button class="tc-btn" onclick="SandboxEngine.injectProfessorTutorData()" style="border-color:#0ea5e9; color:#0369a1; background:#f0f9ff; border-width:2px; width:100%;">👩‍🏫 生成【名师三段论解析】进入副本</button>
+                <button class="btn" style="width:45%; margin:0;" onclick="SandboxEngine.injectBanks()">+ 测试库</button>
+                <button class="btn" style="width:45%; margin:0;" onclick="SandboxEngine.unlockAllArenas()">解锁竞技场</button>
             </div>
         </div>
-        
         <div class="main-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin-bottom: 0; font-size: 19px; font-weight:900;">📚 常规练习库</h2>
-                <div style="font-size: 14px; color: #3b82f6; cursor: pointer; font-weight: 800; padding: 6px 14px; background: #eff6ff; border-radius: 10px; transition: all 0.2s;" onclick="toggleQuizSettings()" id="quiz-settings-btn">⚙️ 展开偏好设置</div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+                <h2 style="margin:0;">📚 常规练习库</h2>
+                <div style="color:#3b82f6; font-weight:800; cursor:pointer;" onclick="document.getElementById('quiz-settings-panel').classList.toggle('hidden')">⚙️ 偏好设置</div>
             </div>
-
-            <div class="controls hidden" id="quiz-settings-panel" style="margin-bottom: 24px;">
-                <div style="flex: 1; min-width: 90px;">
-                    <div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">答题模式</div>
-                    <label><input type="radio" name="mode" value="exam"> 考试统分</label>
-                    <label><input type="radio" name="mode" value="instant" checked> 边答边看</label>
-                </div>
-                <div style="flex: 1; min-width: 90px;">
-                    <div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">题目顺序</div>
-                    <label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label>
-                </div>
-                <div style="flex: 1; min-width: 110px;">
-                    <div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">限时挑战</div>
-                    <label><input type="checkbox" id="timer-cb" onclick="document.getElementById('timer-input-box').style.display = this.checked ? 'block' : 'none'"> 开启倒计时</label>
-                    <div id="timer-input-box" style="display:none; margin-top:6px;">
-                        <input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:65px; padding:8px; text-align:center; display:inline-block; border-radius:8px;">分钟
-                    </div>
-                </div>
+            <div class="hidden" id="quiz-settings-panel" style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:16px; border:2px dashed #cbd5e1;">
+                <label><input type="radio" name="mode" value="exam"> 考试统分</label> &nbsp;
+                <label><input type="radio" name="mode" value="instant" checked> 边答边看</label><br>
+                <label style="margin-top:10px; display:inline-block;"><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label>
+                <label style="margin-top:10px; display:inline-block; margin-left: 10px;"><input type="checkbox" id="timer-cb"> 开启计时</label>
             </div>
-            
             <div id="bank-list"></div>
         </div>
     </div>
 
+    <!-- 页面: 答题 -->
     <div class="container hidden" id="page-quiz">
         <div class="nav-header">
-            <div class="nav-btn" id="nav-btn-back" onclick="location.reload()">〈 保存并退出</div>
+            <div class="nav-btn" onclick="location.reload()">〈 退出</div>
             <div class="nav-title" id="progress-text">1 / 10</div>
-            <div class="nav-btn bookmark-btn" id="btn-star" onclick="toggleStar()">☆ 收藏</div>
+            <div class="nav-btn" id="btn-star" onclick="toggleStar()">☆ 收藏</div>
         </div>
-        
-        <div class="progress-wrapper">
-            <div class="progress-fill" id="progress-fill"></div>
-        </div>
-        <span class="timer-badge hidden" id="timer-display">倒计时 00:00</span>
-        
+        <div class="progress-wrapper"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="timer-badge hidden" id="timer-display">倒计时 00:00</div>
         <div id="material-container"></div>
         <div class="question-title" id="question-text"></div>
         <div id="options-container"></div>
         <div class="feedback-box hidden" id="feedback-box"></div>
-        
-        <button class="btn btn-primary" id="btn-action" onclick="handleAction()" style="margin-top: 20px; padding: 16px; font-size: 17px; border-radius:16px;">确认选择</button>
-        <button class="btn btn-danger" id="btn-quit" onclick="giveUpQuiz()" style="border-radius:16px; padding:16px;">放弃进度，清空重卷</button>
+        <button class="btn btn-primary" id="btn-action" onclick="handleAction()">确认选择</button>
+        <button class="btn btn-danger" onclick="giveUpQuiz()">放弃进度清空重卷</button>
     </div>
 
+    <!-- 页面: 战报 -->
     <div class="container hidden" id="page-result">
-        <div id="challenge-feedback" class="hidden">
-            <div class="cf-title" id="cf-title"></div>
-            <div class="cf-desc" id="cf-desc"></div>
-        </div>
-
-        <h2 style="text-align: center; border: none; font-size: 24px; padding: 0; font-weight:900;" id="result-page-title">练习战报</h2>
-        <div style="font-size: 56px; color: #3b82f6; font-weight: 900; text-align: center; margin: 16px 0; text-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);" id="score-text"></div>
+        <h2 style="text-align: center; margin-top:20px; font-size:24px;" id="result-page-title">练习战报</h2>
+        <div style="font-size: 56px; color: #3b82f6; font-weight: 900; text-align: center; margin: 16px 0;" id="score-text"></div>
         <div style="text-align: center; color: #64748b; font-size: 16px; margin-bottom: 32px; font-weight: 700;" id="stat-text"></div>
-        
-        <div class="flex-row" style="background:#f8fafc; padding:20px; border:2px solid #e2e8f0; border-radius:16px; justify-content:center; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
-            <label style="font-size:15px; color:#475569; font-weight: 800;">提取分批设定：</label>
-            <input type="number" id="chunk-size-input" value="5" min="1" max="50" style="width:70px; margin-bottom:0; text-align:center; padding:10px; border-radius:10px; font-weight:800;">
-            <label style="font-size:15px; color:#475569; margin-right:12px; font-weight:700;">题 / 批</label>
-            <button class="btn btn-primary" style="margin:0; padding:10px 20px; line-height:normal; border-radius:10px;" onclick="renderChunks()">应用</button>
-        </div>
-
-        <div id="chunks-container" style="margin-top: 28px;"></div>
-        <button class="btn btn-primary" style="margin-top: 28px; padding: 18px; font-size: 17px; border-radius:16px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);" onclick="clearReportAndReload()">标记处理完成，返回主页</button>
+        <div id="chunks-container"></div>
+        <button class="btn btn-primary" style="margin-top:20px;" onclick="location.reload()">标记完成，返回主页</button>
     </div>
 
-    <div class="container hidden" id="page-tutor" style="background: #f4f6f8; min-height: 100vh; padding-bottom: 40px;">
-        <div class="nav-header" style="background:#fff; margin:-12px -12px 20px -12px; padding:16px 20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:none;">
-            <div class="nav-btn" onclick="Router.closeTutorPage()" style="background:#f1f5f9; color:#475569;">〈 返回主页</div>
-            <div class="nav-title" style="color:#0f766e; font-size:19px; font-weight:900;">👩‍🏫 错题名师答疑屏</div>
-            <div class="nav-btn" style="visibility:hidden;">占位</div>
+    <!-- 页面: 导师专属屏 -->
+    <div class="container hidden" id="page-tutor">
+        <div class="nav-header">
+            <div class="nav-btn" onclick="Router.navigate('page-home'); renderBankList();">〈 返回主页</div>
+            <div class="nav-title" style="color:#0f766e;">👩‍🏫 错题名师</div>
+            <div style="width:50px;"></div>
         </div>
-        
-        <div class="tutor-progress-container" id="tutor-progress-box">
-            <div class="tutor-progress-text">
-                <span>当前通关进度</span>
-                <span id="tutor-progress-count" style="color:#10b981;">0 / 0</span>
-            </div>
-            <div class="progress-wrapper" style="margin-bottom:0; height:12px; border-radius:6px; background:#f1f5f9;">
-                <div class="progress-fill" id="tutor-progress-fill" style="width: 0%; border-radius:6px;"></div>
-            </div>
-        </div>
-
-        <p style="font-size:14px; color:#0f766e; margin-bottom:20px; font-weight:700; text-align:center; background:#ccfbf1; padding:14px; border-radius:14px; border:2px dashed #5eead4;">
-            💡 请将 AI 导师返回的 JSON 解析胶囊粘贴至下方输入框，开启您的沉浸式通关之旅。
-        </p>
-        
-        <textarea id="tutor-input" placeholder="请粘贴 AI 返回的纯 JSON 数组代码..." style="height: 140px; font-family: monospace; border-color:#99f6e4; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
-        <button class="btn" style="background: #0ea5e9; color: white; border-color: #0ea5e9; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3); padding: 16px; font-size: 17px; font-weight:900; border-radius:16px;" onclick="generateTutorCards()">✨ 召唤名师深度解析</button>
-        
-        <div id="tutor-cards-container" style="margin-top: 28px;"></div>
+        <textarea id="tutor-input" placeholder="请粘贴 AI 返回的纯 JSON..." style="height:140px; border-color:#99f6e4;"></textarea>
+        <button class="btn" style="background:#0ea5e9; color:white;" onclick="generateTutorCards()">✨ 召唤解析</button>
+        <div id="tutor-cards-container" style="margin-top:20px;"></div>
     </div>
 
+    <!-- 系统弹窗 -->
     <div class="sys-modal-overlay hidden" id="sys-modal">
         <div class="sys-modal-box">
             <div class="sys-modal-title" id="modal-title">提示</div>
             <div class="sys-modal-desc" id="modal-desc">内容</div>
-            <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认 (3s)</button>
-            <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569; padding: 14px; border-radius: 12px; font-size: 16px;">取消</button>
+            <button class="btn btn-primary" id="modal-btn-confirm">确认</button>
+            <button class="btn" id="modal-btn-cancel" style="background:#f1f5f9;">取消</button>
         </div>
     </div>
 
-    <div class="sys-modal-overlay hidden" id="epic-modal">
-        <div class="sys-modal-box epic-modal-box">
-            <div style="font-size: 56px; margin-bottom: 16px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.3));">🏆</div>
-            <div class="sys-modal-title epic-modal-title" id="epic-title">史诗成就达成</div>
-            <div class="sys-modal-desc epic-modal-desc" id="epic-desc">描述内容</div>
-            <button class="btn btn-epic" onclick="epicCloudBackupFlow()">✨ 立即一键封存至云端</button>
-            <button class="btn" style="background: transparent; border: 2px solid #fcd34d; color: #b45309; padding: 14px; border-radius: 14px; font-weight:800;" onclick="document.getElementById('epic-modal').classList.add('hidden')">稍后再说</button>
-        </div>
-    </div>
+    <script>
+    /* 核心逻辑高度压缩 */
+    const Router = { navigate: id => { ['page-home','page-quiz','page-result','page-tutor'].forEach(p => document.getElementById(p).classList.toggle('hidden', p !== id)); window.scrollTo(0,0); }, openTutorPage: function() { closeDrawer(); this.navigate('page-tutor'); } };
+    let banks = JSON.parse(localStorage.getItem('exam_banks') || '{"sys_wrong":{"name":"💔 我的错题本","data":[],"isSystem":true,"sysType":"wrong"},"sys_star":{"name":"⭐ 专属收藏夹","data":[],"isSystem":true,"sysType":"star"}}');
+    let globalStats = JSON.parse(localStorage.getItem('exam_global_stats') || '{"totalAnswered":0,"totalCorrect":0,"challenge":{"easy":0,"normal":0,"hard":0,"extreme":0},"mastered":[],"attempted":[]}');
+    let isTestMode = localStorage.getItem('exam_test_mode') === 'true';
+    let foldState = JSON.parse(localStorage.getItem('exam_fold_state') || '{}');
+    const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], selected: [], isAnswered: false, timerMode: false, timeRemaining: 0, isChallenge: false, optShuffle: false };
+    let timerInterval = null;
 
-    <link rel="stylesheet" href="style.css?v=999">
-</body>
-</html>
+    window.openDrawer = () => { document.getElementById('side-drawer').classList.add('open'); document.getElementById('drawer-overlay').classList.add('open'); };
+    window.closeDrawer = () => { document.getElementById('side-drawer').classList.remove('open'); document.getElementById('drawer-overlay').classList.remove('open'); };
+    window.toggleFold = id => { let el = document.getElementById(id); el.classList.toggle('open'); foldState[id] = el.classList.contains('open'); localStorage.setItem('exam_fold_state', JSON.stringify(foldState)); };
+    
+    const SysModal = {
+        timer: null,
+        show: function(t, d, isD, cb) {
+            document.getElementById('sys-modal').classList.remove('hidden'); document.getElementById('modal-title').innerText=t; document.getElementById('modal-desc').innerHTML=d;
+            let btnC=document.getElementById('modal-btn-confirm'); let btnCancel=document.getElementById('modal-btn-cancel');
+            btnCancel.style.display='inline-block'; btnC.className=isD?"btn btn-danger":"btn btn-primary"; btnC.disabled=true; btnCancel.onclick=()=>this.hide();
+            let cd=3; btnC.innerText=`强制等待 (${cd}s)`; if(this.timer) clearInterval(this.timer);
+            this.timer = setInterval(()=>{ cd--; if(cd<=0){ clearInterval(this.timer); btnC.disabled=false; btnC.innerText="确认执行"; btnC.onclick=()=>{this.hide();cb();}; } else btnC.innerText=`强制等待 (${cd}s)`; },1000);
+        },
+        alert: function(t, d) { this.show(t,d,false,()=>{}); document.getElementById('modal-btn-cancel').style.display='none'; document.getElementById('modal-btn-confirm').disabled=false; document.getElementById('modal-btn-confirm').innerText="我知道了"; if(this.timer) clearInterval(this.timer); },
+        hide: function() { document.getElementById('sys-modal').classList.add('hidden'); if(this.timer) clearInterval(this.timer); }
+    };
+    window.alert = msg => SysModal.alert("提示", String(msg));
+
+    window.onload = function() { 
+        renderBankList(); updateDashboard();
+        for(let id in foldState) if(foldState[id] && document.getElementById(id)) document.getElementById(id).classList.add('open');
+        if(isTestMode) document.getElementById('test-console').classList.remove('hidden');
+    };
+
+    function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
+    function cleanQuestionForStorage(q) { let copy = JSON.parse(JSON.stringify(q)); delete copy.optMap; return copy; }
+    function saveBanks() { localStorage.setItem('exam_banks', JSON.stringify(banks)); updateDashboard(); }
+    function saveGlobalStats() { localStorage.setItem('exam_global_stats', JSON.stringify(globalStats)); updateDashboard(); }
+
+    function updateDashboard() {
+        let tQ=0; for(let i in banks) if(!banks[i].isSystem && banks[i].data) tQ+=banks[i].data.length;
+        document.getElementById('global-total-q').innerText=tQ; document.getElementById('global-total-ans').innerText=globalStats.totalAnswered; document.getElementById('global-total-cor').innerText=globalStats.totalCorrect;
+        document.getElementById('h-easy').innerText=globalStats.challenge.easy||0; document.getElementById('h-norm').innerText=globalStats.challenge.normal||0; document.getElementById('h-hard').innerText=globalStats.challenge.hard||0; document.getElementById('h-extr').innerText=globalStats.challenge.extreme||0;
+        const req = {easy:70, normal:210, hard:420, extreme:630};
+        ['easy','normal','hard','extreme'].forEach(m => {
+            let el = document.getElementById('arena-'+m); let lmsg = document.getElementById('lm-'+m);
+            if(tQ < req[m]) { el.classList.add('locked-mode'); lmsg.innerText=`需库容>${req[m]}`; } else { el.classList.remove('locked-mode'); lmsg.innerText=''; }
+        });
+    }
+
+    function renderBankList() {
+        let sList = document.getElementById('sys-bank-list'); let cList = document.getElementById('bank-list'); 
+        sList.innerHTML=''; cList.innerHTML=''; 
+        for(let id in banks) {
+            let b = banks[id]; if(!b.data) continue;
+            if(b.isSystem) {
+                sList.innerHTML += `<div class="bank-item bank-sys-${b.sysType}"><div class="bank-title">${b.name} (${b.data.length})</div><button class="btn btn-primary" onclick="startQuiz('${id}')" ${b.data.length===0?'disabled':''}>作答</button></div>`;
+            } else {
+                let rHtml = localStorage.getItem('exam_state') && JSON.parse(localStorage.getItem('exam_state')).bankId === id ? '继续' : '开始';
+                cList.innerHTML += `<div class="bank-item"><div class="bank-header-row"><div class="bank-title">${b.name}</div><div class="bank-delete-text" onclick="deleteBank('${id}')">删除</div></div><div class="bank-meta-tag">共 ${b.data.length} 题</div><button class="btn btn-primary" onclick="startQuiz('${id}')">${rHtml}</button></div>`;
+            }
+        }
+    }
+
+    window.deleteBank = function(id) { if(confirm('删除？')){ delete banks[id]; saveBanks(); renderBankList(); } }
+
+    function blockShuffle(array) { let arr=[...array]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+    window.startQuiz = function(bankId) {
+        App.bankId = bankId; App.isSystemBank = banks[bankId].isSystem;
+        let saved = localStorage.getItem('exam_state');
+        if(saved && JSON.parse(saved).bankId === bankId) {
+            let s = JSON.parse(saved); Object.assign(App, s);
+        } else {
+            App.data = JSON.parse(JSON.stringify(banks[bankId].data));
+            if(document.getElementById('shuffle-cb').checked) App.data = blockShuffle(App.data);
+            App.data.forEach(q => { q.optMap={}; let k=Object.keys(q.options); if(document.getElementById('opt-shuffle-cb') && document.getElementById('opt-shuffle-cb').checked) k=blockShuffle(k); k.forEach((x,i)=>q.optMap[Object.keys(q.options).sort()[i]]=x); });
+            App.current=0; App.score=0; App.wrongList=[]; App.selected=[]; App.isAnswered=false; App.mode=document.querySelector('input[name="mode"]:checked').value;
+            App.timerMode=document.getElementById('timer-cb').checked; App.timeRemaining=App.timerMode?30*60:0;
+        }
+        launchQuizEngine();
+    };
+
+    window.startChallenge = function(diff) {
+        let req = {easy:10, normal:30, hard:60, extreme:90}; if(document.getElementById('arena-'+diff).classList.contains('locked-mode')) return alert('未解锁');
+        let pool = []; for(let i in banks) if(banks[i].data) pool = pool.concat(banks[i].data);
+        App.data = blockShuffle(pool).slice(0, req[diff]); App.data.forEach(q => { q.optMap={}; Object.keys(q.options).sort().forEach(x=>q.optMap[x]=x); });
+        App.current=0; App.score=0; App.wrongList=[]; App.selected=[]; App.isAnswered=false; App.isChallenge=true; App.challengeDiff=diff; App.mode='exam'; App.timerMode=(diff==='extreme'); App.timeRemaining=App.timerMode?90*60:0; App.bankId='challenge'; App.isSystemBank=true;
+        launchQuizEngine();
+    };
+
+    function launchQuizEngine() {
+        closeDrawer(); Router.navigate('page-quiz');
+        if(App.timerMode) { document.getElementById('timer-display').classList.remove('hidden'); if(timerInterval) clearInterval(timerInterval); timerInterval = setInterval(()=>{ App.timeRemaining--; let m=Math.floor(App.timeRemaining/60).toString().padStart(2,'0'); let s=(App.timeRemaining%60).toString().padStart(2,'0'); document.getElementById('timer-display').innerText=`⏳ ${m}:${s}`; if(App.timeRemaining<=0) showResult(); },1000); } else document.getElementById('timer-display').classList.add('hidden');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        App.selected=[]; App.isAnswered=false; let q=App.data[App.current];
+        document.getElementById('progress-text').innerText=`${App.current+1} / ${App.data.length}`; document.getElementById('progress-fill').style.width=`${(App.current/App.data.length)*100}%`;
+        
+        let matMatch = q.question.match(/\[材料原文[：:]([\s\S]*?)\]([\s\S]*)/);
+        document.getElementById('material-container').innerHTML = matMatch ? `<div class="material-box"><div style="font-weight:900;margin-bottom:8px;">📖 阅读材料</div><div style="white-space:pre-wrap;font-size:14px;">${matMatch[1].trim()}</div></div>` : '';
+        document.getElementById('question-text').innerHTML = `<span class="badge">${q.type==='multiple'?'多选':'单选'}</span> ${matMatch ? matMatch[2].trim() : q.question}`;
+        
+        let isStar = banks['sys_star'].data.some(x=>getFingerprint(x.question)===getFingerprint(q.question));
+        document.getElementById('btn-star').innerText=isStar?'★ 已收藏':'☆ 收藏'; document.getElementById('btn-star').className=isStar?'nav-btn bookmark-btn active':'nav-btn bookmark-btn';
+        
+        let optsHtml=''; Object.keys(q.optMap).sort().forEach(dk => { let ok=q.optMap[dk]; optsHtml+=`<button class="opt-btn" id="opt-${ok}" onclick="selectOpt('${ok}','${q.type}')"><span class="opt-letter">${dk}.</span> <span>${q.options[ok]}</span></button>`; });
+        document.getElementById('options-container').innerHTML=optsHtml; document.getElementById('feedback-box').classList.add('hidden');
+        document.getElementById('btn-action').innerText = App.mode==='instant'?'确认选择':(App.current===App.data.length-1?'交卷':'下一题');
+        if(!App.isChallenge) localStorage.setItem('exam_state', JSON.stringify(App));
+    }
+
+    window.selectOpt = function(k, t) {
+        if(App.isAnswered) return;
+        if(t==='single') { App.selected=[k]; document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('opt-'+k).classList.add('selected'); }
+        else { let i=App.selected.indexOf(k); if(i>-1){ App.selected.splice(i,1); document.getElementById('opt-'+k).classList.remove('selected');} else { App.selected.push(k); document.getElementById('opt-'+k).classList.add('selected'); } }
+        if(!App.isChallenge) localStorage.setItem('exam_state', JSON.stringify(App));
+    };
+
+    window.toggleStar = function() {
+        let q=App.data[App.current]; let fp=getFingerprint(q.question); let isStar=banks['sys_star'].data.some(x=>getFingerprint(x.question)===fp);
+        if(isStar) banks['sys_star'].data = banks['sys_star'].data.filter(x=>getFingerprint(x.question)!==fp); else banks['sys_star'].data.push(cleanQuestionForStorage(q));
+        saveBanks(); renderQuestion();
+    };
+
+    window.handleAction = function() {
+        let q = App.data[App.current];
+        if(App.mode==='instant' && !App.isAnswered) {
+            if(!App.selected.length) return alert('请选择选项'); App.isAnswered=true; processAns(q);
+            let my = App.selected.sort().join(''); let rt = q.answer.split('').sort().join('');
+            document.querySelectorAll('.opt-btn').forEach(b=>{ let k=b.id.replace('opt-',''); if(q.answer.includes(k)) b.classList.add('correct'); else if(my.includes(k)) b.classList.add('wrong'); b.style.pointerEvents='none'; });
+            document.getElementById('feedback-box').classList.remove('hidden'); document.getElementById('feedback-box').innerHTML= my===rt? '✅ 完全正确！': `❌ 回答错误。正确答案是 ${rt}`; document.getElementById('btn-action').innerText= App.current===App.data.length-1?'查看战报':'下一题'; return;
+        }
+        if(App.mode==='exam' && !App.selected.length && !confirm('确定要跳过此题吗？')) return;
+        if(App.mode==='exam') processAns(q);
+        App.current++; App.current>=App.data.length ? showResult() : renderQuestion();
+    };
+
+    function processAns(q) {
+        let my = App.selected.sort().join(''); let rt = q.answer.split('').sort().join(''); let isRt = (my===rt); let fp = getFingerprint(q.question);
+        if(!App.isSystemBank && !App.isChallenge) { globalStats.totalAnswered++; if(isRt) globalStats.totalCorrect++; saveGlobalStats(); }
+        if(isRt && App.bankId==='sys_wrong') { banks['sys_wrong'].data = banks['sys_wrong'].data.filter(x=>getFingerprint(x.question)!==fp); saveBanks(); }
+        if(!isRt && !isTestMode && !banks['sys_wrong'].data.some(x=>getFingerprint(x.question)===fp)) { banks['sys_wrong'].data.push(cleanQuestionForStorage(q)); saveBanks(); }
+        if(!isRt) App.wrongList.push({q:q.question, options:q.options, my:my, right:q.answer, source:q.source||'未知'});
+        if(isRt) App.score++;
+    }
+
+    window.showResult = function() {
+        if(timerInterval) clearInterval(timerInterval); localStorage.removeItem('exam_state'); Router.navigate('page-result');
+        let pct = Math.round((App.score/App.data.length)*100); document.getElementById('score-text').innerText = `${App.score} / ${App.data.length} (${pct}%)`;
+        if(App.isChallenge) { globalStats.challenge[App.challengeDiff]++; saveGlobalStats(); }
+        
+        let cHtml=''; App.wrongList.forEach((x,i)=>{
+            let oStr=''; if(x.options) Object.keys(x.options).sort().forEach(k=>oStr+=`${k}. ${x.options[k]} `);
+            cHtml+=`<div class="chunk-box"><textarea style="width:100%;height:120px;border:none;resize:none;" readonly>题目：${x.q}\n选项：${oStr}\n我的作答：${x.my||'空'}，正确答案：${x.right}</textarea></div>`;
+        }); document.getElementById('chunks-container').innerHTML = cHtml || '<div style="text-align:center; color:#10b981; font-weight:800; font-size:18px;">✨ 太棒了，本次全对！</div>';
+    };
+
+    window.giveUpQuiz = function() { if(confirm('确定要清空重卷吗？')){ if(timerInterval) clearInterval(timerInterval); localStorage.removeItem('exam_state'); location.reload(); } };
+    
+    window.generateTutorCards = function() {
+        try { let d=JSON.parse(document.getElementById('tutor-input').value.replace(/
+
+```
