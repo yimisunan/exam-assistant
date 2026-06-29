@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.3.2 (双擎修复版)</title>
+    <title>考试助手 V0.4.0 (极简海量管理版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -87,22 +87,38 @@
         .lock-msg { display: block; font-size: 11px; font-weight: 800; margin-top: 10px; padding-top: 8px; border-top: 2px dashed rgba(255,255,255,0.3); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); line-height: 1.4;}
         .arena-extreme .lock-msg { color: #fde68a; border-top-color: rgba(251, 191, 36, 0.3); }
 
-        .bank-item { background: #ffffff; border: 2px solid #e2e8f0; padding: 18px 16px; border-radius: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 14px; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02);}
-        .bank-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-        .bank-title { font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1.4; flex: 1; word-break: break-all;}
-        .bank-delete-text { font-size: 13px; color: #ef4444; font-weight: 800; cursor: pointer; padding: 6px 10px; border-radius: 8px; background: #fef2f2; transition: transform 0.2s; flex-shrink: 0;}
-        .bank-delete-text:active { transform: scale(0.9); }
-        .bank-meta-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .bank-meta-tag { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center;}
-        .bank-meta-tag.highlight { color: #d97706; background: #fffbeb; border: 1px solid #fde68a;}
+        /* V0.4.0 核心排版：紧凑型列表与左滑删除 */
+        .search-box { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; margin-bottom: 20px; background: #f8fafc; font-weight: 700; outline: none; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .search-box:focus { border-color: #3b82f6; background-color: #ffffff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); }
+        
+        .bank-item-wrapper { position: relative; margin-bottom: 12px; border-radius: 14px; background: #ef4444; overflow: hidden; }
+        .bank-item { background: #ffffff; padding: 16px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); border: 2px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;}
+        .bank-item:active:not(.swiped) { background: #f8fafc; transform: scale(0.98); }
+        .bank-item.swiped { transform: translateX(-70px); }
+        .bank-item.sys-item { border: 2px solid #6ee7b7; background: #ecfdf5; box-shadow: 0 4px 15px rgba(52,211,153,0.1); }
+        .bank-item.sys-item:active { background: #d1fae5; }
+        .sys-wrapper { background: transparent; }
 
-        .bank-sys-wrong { border-color: #fca5a5; background: #fef2f2; }
-        .bank-sys-wrong .bank-meta-tag { background: #fee2e2; color: #b91c1c; }
-        .bank-sys-star { border-color: #fde047; background: #fffdf5; }
-        .bank-sys-star .bank-meta-tag { background: #fef08a; color: #a16207; }
-        .bank-completed { background: #f8fafc; border-color: #cbd5e1; opacity: 0.8;}
-        .stamp-completed { position: absolute; top: 16px; right: 60px; transform: rotate(-15deg); color: #ef4444; border: 3px solid #ef4444; padding: 4px 12px; font-size: 15px; font-weight: 900; letter-spacing: 2px; border-radius: 8px; opacity: 0.8; pointer-events: none; z-index: 10; }
+        .bank-delete-btn { position: absolute; right: 0; top: 0; bottom: 0; width: 70px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; cursor: pointer; z-index: 1; transition: opacity 0.2s; }
+        .bank-delete-btn:active { background: #dc2626; opacity: 0.8; }
+        
+        .bank-info { flex: 1; min-width: 0; padding-right: 12px; display: flex; flex-direction: column; gap: 4px; }
+        .bank-name { font-size: 15px; font-weight: 800; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+        .bank-meta { font-size: 12px; color: #64748b; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        
+        .bank-action-icon { width: 28px; height: 28px; border-radius: 14px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; flex-shrink: 0; transition: all 0.2s; }
+        .bank-action-icon.resume { background: #3b82f6; color: white; font-size: 10px; }
+        .bank-action-icon.sys-icon { background: #d1fae5; color: #059669; }
 
+        .graduated-folder { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 14px; margin-top: 24px; transition: all 0.3s; }
+        .graduated-folder-header { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 800; color: #64748b; cursor: pointer; user-select: none; }
+        .graduated-folder-header:active { background: #f1f5f9; }
+        .graduated-content { display: none; padding: 0 12px 12px 12px; }
+        .graduated-folder.open .graduated-content { display: block; }
+        .graduated-folder.open .gf-icon { transform: rotate(180deg); }
+        .gf-icon { transition: transform 0.3s; font-size: 12px; }
+
+        /* 其他原有控制面板样式 */
         .controls { background: #f8fafc; border: 2px dashed #cbd5e1; padding: 18px; border-radius: 16px; margin-bottom: 20px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
         .controls label { display: flex; align-items: center; margin-bottom: 6px; cursor: pointer; color: #475569; font-weight: 700;}
         .controls input[type="radio"], .controls input[type="checkbox"] { margin-right: 8px; transform: scale(1.2); accent-color: #3b82f6;}
@@ -320,18 +336,30 @@
     </div>
     
     <div class="main-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="margin-bottom: 0; font-size: 19px; font-weight:900;">📚 常规练习库</h2>
-            <div style="font-size: 14px; color: #3b82f6; cursor: pointer; font-weight: 800; padding: 6px 14px; background: #eff6ff; border-radius: 10px; transition: all 0.2s;" onclick="toggleQuizSettings()" id="quiz-settings-btn">⚙️ 展开偏好设置</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2 style="margin-bottom: 0; font-size: 19px; font-weight:900;">📚 练习题库</h2>
+            <div style="font-size: 13px; color: #3b82f6; cursor: pointer; font-weight: 800; padding: 6px 14px; background: #eff6ff; border-radius: 10px; transition: all 0.2s;" onclick="toggleQuizSettings()" id="quiz-settings-btn">⚙️ 偏好设置</div>
         </div>
-        <div class="controls hidden" id="quiz-settings-panel" style="margin-bottom: 24px;">
+        
+        <div class="controls hidden" id="quiz-settings-panel" style="margin-bottom: 16px;">
             <div style="flex: 1; min-width: 90px;"><div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">答题模式</div><label><input type="radio" name="mode" value="exam"> 考试统分</label><label><input type="radio" name="mode" value="instant" checked> 边答边看</label></div>
             <div style="flex: 1; min-width: 90px;"><div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">题目顺序</div><label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label></div>
             <div style="flex: 1; min-width: 110px;"><div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">限时挑战</div><label><input type="checkbox" id="timer-cb" onclick="$('timer-input-box').style.display = this.checked ? 'block' : 'none'"> 开启倒计时</label>
                 <div id="timer-input-box" style="display:none; margin-top:6px;"><input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:65px; padding:8px; text-align:center; display:inline-block; border-radius:8px;">分钟</div>
             </div>
         </div>
+
+        <input type="text" id="bank-search-input" class="search-box" placeholder="🔍 快速搜索题库名称..." oninput="onSearchBank(this.value)">
+        
         <div id="bank-list"></div>
+
+        <div id="graduated-folder" class="graduated-folder hidden">
+            <div class="graduated-folder-header" onclick="$('graduated-folder').classList.toggle('open')">
+                <span>📦 已毕业归档 (<span id="grad-count">0</span>)</span>
+                <span class="gf-icon">▼</span>
+            </div>
+            <div class="graduated-content" id="graduated-bank-list"></div>
+        </div>
     </div>
 </div>
 
@@ -375,7 +403,7 @@
 <div class="sys-modal-overlay hidden" id="sys-modal">
     <div class="sys-modal-box">
         <div class="sys-modal-title" id="modal-title">提示</div><div class="sys-modal-desc" id="modal-desc">内容</div>
-        <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认 (3s)</button>
+        <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认</button>
         <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569; padding: 14px; border-radius: 12px; font-size: 16px;">取消</button>
     </div>
 </div>
@@ -418,16 +446,13 @@
         return { material: '', question: rawQ, hasMaterial: false };
     }
 
-    // 【核心修复 Bug 1】全新的题目全等对比引擎（防止题干相同但选项不同的指纹碰撞）
     function isSameQuestion(q1, q2) {
         if (getFingerprint(q1.question) !== getFingerprint(q2.question)) return false;
         if (q1.options && q2.options) {
             let k1 = Object.keys(q1.options).sort(), k2 = Object.keys(q2.options).sort();
             if (k1.join('') !== k2.join('')) return false;
             for (let k of k1) if (q1.options[k] !== q2.options[k]) return false;
-        } else if (q1.options || q2.options) {
-            return false; // 一个有选项一个没选项，不是同一题
-        }
+        } else if (q1.options || q2.options) { return false; }
         return true;
     }
 
@@ -518,16 +543,23 @@
 
     const SysModal = {
         timer: null,
-        show: function(title, desc, isDanger, onConfirm) {
+        // 【核心体验优化】支持 waitSec 参数，0 即可免等待立刻点击确认
+        show: function(title, desc, isDanger, onConfirm, waitSec = 3) {
             $('sys-modal').classList.remove('hidden'); $('modal-title').innerText = title; $('modal-desc').innerHTML = desc;
             let btnC = $('modal-btn-confirm'); let btnCancel = $('modal-btn-cancel');
             btnCancel.style.display = 'inline-block'; btnC.className = isDanger ? "btn btn-danger" : "btn btn-primary"; btnC.disabled = true; btnCancel.onclick = () => { this.hide(); };
-            let cd = 3; btnC.innerText = `强制等待 (${cd}s)`;
+            
+            let cd = waitSec;
             if(this.timer) clearInterval(this.timer);
-            this.timer = setInterval(() => {
-                cd--; if(cd <= 0) { clearInterval(this.timer); btnC.disabled = false; btnC.innerText = isDanger ? "我已知晓，确认执行" : "确认执行"; btnC.onclick = () => { this.hide(); onConfirm(); };
-                } else { btnC.innerText = `强制等待 (${cd}s)`; }
-            }, 1000);
+            if (cd > 0) {
+                btnC.innerText = `强制等待 (${cd}s)`;
+                this.timer = setInterval(() => {
+                    cd--; if(cd <= 0) { clearInterval(this.timer); btnC.disabled = false; btnC.innerText = isDanger ? "我已知晓，确认执行" : "确认执行"; btnC.onclick = () => { this.hide(); onConfirm(); };
+                    } else { btnC.innerText = `强制等待 (${cd}s)`; }
+                }, 1000);
+            } else {
+                btnC.disabled = false; btnC.innerText = isDanger ? "确认删除" : "确认执行"; btnC.onclick = () => { this.hide(); onConfirm(); };
+            }
         },
         alert: function(title, desc) {
             $('sys-modal').classList.remove('hidden'); $('modal-title').innerText = title; $('modal-desc').innerHTML = desc;
@@ -553,51 +585,27 @@
     const UNLOCK_PRE = { 'easy': null, 'normal': 'easy', 'hard': 'normal', 'extreme': 'hard' };
     const PRE_NAMES = { 'easy': '简单', 'normal': '普通', 'hard': '困难', 'extreme': '极限' };
 
-    // --- 极简假数据工厂 ---
     const mockQ = (i, mat) => ({ id: "mq_"+i+"_"+Date.now(), question: mat ? "[材料原文：这是一段沙盒自动生成的测试材料。]\n针对该材料的子题考法？" : `[沙盒] 独立测试题 ${i}`, options: {A:"甲", B:"乙", C:"丙", D:"丁"}, answer: "A", type: "single", source: "沙盒引擎" });
 
-    // 【核心修复 Bug 2】封装多槽位存档清理函数
-    function clearAllStates() {
-        let keys = [];
-        for (let i = 0; i < localStorage.length; i++) { let k = localStorage.key(i); if (k && k.startsWith('exam_state_')) keys.push(k); }
-        keys.forEach(k => SafeStorage.remove(k));
-    }
-    function getAllStates() {
-        let states = {};
-        for (let i = 0; i < localStorage.length; i++) { let k = localStorage.key(i); if (k && k.startsWith('exam_state_')) states[k] = JSON.parse(localStorage.getItem(k)); }
-        return states;
-    }
+    function clearAllStates() { let keys = []; for (let i = 0; i < localStorage.length; i++) { let k = localStorage.key(i); if (k && k.startsWith('exam_state_')) keys.push(k); } keys.forEach(k => SafeStorage.remove(k)); }
+    function getAllStates() { let states = {}; for (let i = 0; i < localStorage.length; i++) { let k = localStorage.key(i); if (k && k.startsWith('exam_state_')) states[k] = JSON.parse(localStorage.getItem(k)); } return states; }
 
     const SandboxEngine = {
-        toggleTestMode: function() {
-            if (!isTestMode) {
-                let totalQ = 0; for (let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) totalQ += banks[id].data.length; }
-                if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) return alert("⚠️ 请在【0题库、0进度】的纯净状态下开启沙盒。");
-                SafeStorage.set('exam_test_mode', 'true'); alert("🔧 沙盒激活！"); location.reload();
-            } else { banks = ensureSystemBanks({}); globalStats = ensureGlobalStats(null); saveBanks(true); saveGlobalStats(true); clearAllStates(); SafeStorage.remove('exam_last_report'); setNeedSync(false); SafeStorage.set('exam_test_mode', 'false'); alert("✅ 已退出并恢复纯净环境！"); location.reload(); }
-        },
-        injectProfessorTutorData: function() {
-            let q1 = mockQ(1, true), q2 = mockQ(2, false); q2.answer = "B";
-            banks['sys_wrong'].data.push(q1, q2); saveBanks(); renderBankList();
-            $('tutor-input').value = JSON.stringify([{ original_question: q1.question, my_answer: "B", correct_answer: "A", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "依据原文" }, { original_question: q2.question, my_answer: "A", correct_answer: "B", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "未检索" }], null, 2); Router.openTutorPage(); generateTutorCards();
-        },
+        toggleTestMode: function() { if (!isTestMode) { let totalQ = 0; for (let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) totalQ += banks[id].data.length; } if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) return alert("⚠️ 请在【0题库、0进度】的纯净状态下开启沙盒。"); SafeStorage.set('exam_test_mode', 'true'); alert("🔧 沙盒激活！"); location.reload(); } else { banks = ensureSystemBanks({}); globalStats = ensureGlobalStats(null); saveBanks(true); saveGlobalStats(true); clearAllStates(); SafeStorage.remove('exam_last_report'); setNeedSync(false); SafeStorage.set('exam_test_mode', 'false'); alert("✅ 已退出并恢复纯净环境！"); location.reload(); } },
+        injectProfessorTutorData: function() { let q1 = mockQ(1, true), q2 = mockQ(2, false); q2.answer = "B"; banks['sys_wrong'].data.push(q1, q2); saveBanks(); renderBankList(); $('tutor-input').value = JSON.stringify([{ original_question: q1.question, my_answer: "B", correct_answer: "A", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "依据原文" }, { original_question: q2.question, my_answer: "A", correct_answer: "B", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "未检索" }], null, 2); Router.openTutorPage(); generateTutorCards(); },
         unlockAllArenas: function() { banks['test_arena_' + Date.now()] = { name: "🧪 竞技解锁库 (700题)", data: Array.from({length: 700}, (_, i) => mockQ(i)), completed: false, maxRate: 0 }; globalStats.totalCorrect += 500; globalStats.totalAnswered += 600; globalStats.challenge = { easy:1, normal:1, hard:1, extreme:0 }; saveBanks(true); saveGlobalStats(); renderBankList(); alert("✅ 全难度竞技场及700假题库已注入！"); },
         injectBanks: function() { banks['test_100_' + Date.now()] = { name: "🧪 100题容量库", data: Array.from({length: 100}, (_, i) => mockQ(i)), completed: false, maxRate: 0 }; saveBanks(); renderBankList(); alert("✅ 100题库注入完成"); },
         injectWrongAndStar: function() { banks['sys_wrong'].data.push(...Array.from({length: 20}, (_, i) => mockQ(i))); banks['sys_star'].data.push(...Array.from({length: 20}, (_, i) => mockQ(i))); saveBanks(); renderBankList(); alert("✅ 各20道错题与收藏注入完成"); },
         mockInterruptState: function() { SafeStorage.set('exam_state_test_bank', JSON.stringify({ bankId: 'test_bank', current: 15, score: 8, mode: 'instant', wrongList: [], stars: [], isAnswered: false, selected: [], activeData: Array.from({length: 30}, (_, i) => mockQ(i)), timerMode: true, timeRemaining: 1500, optShuffle: false })); alert("✅ 中断存档伪造完成，请刷新页面查看"); location.reload(); },
         jumpToResult: function() { App.data = new Array(20).fill({}); App.score = 8; App.wrongList = Array.from({length: 12}, (_, i) => ({ id: "wq_"+i, q: `假错题 ${i}`, options: {A:"甲", B:"乙"}, source: "沙盒", my: "B", right: "A", reason: "错" })); App.isChallenge = false; App.bankId = 'test_bank'; App.isSystemBank = false; showResult(); },
-        triggerRedDot: function() { setNeedSync(true); alert("🔴 同步红点已强制点亮！"); },
-        triggerEpicModal: function() { showEpicModal("史诗弹窗测试", "这是一段用于测试史诗成就UI的描述文字。"); },
-        resetAllStatsFlow: function() { SysModal.show("🔥 危险：清除进度", "将清空所有大盘及系统题库", true, () => { globalStats = ensureGlobalStats(null); banks['sys_wrong'].data = []; banks['sys_star'].data = []; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } } saveBanks(true); saveGlobalStats(); clearAllStates(); SafeStorage.remove('exam_last_report'); setNeedSync(false); alert("✅ 重置完成"); location.reload(); }); }
+        triggerRedDot: function() { setNeedSync(true); alert("🔴 同步红点已强制点亮！"); }, triggerEpicModal: function() { showEpicModal("史诗弹窗测试", "这是一段用于测试史诗成就UI的描述文字。"); },
+        resetAllStatsFlow: function() { SysModal.show("🔥 危险：清除进度", "将清空所有大盘及系统题库", true, () => { globalStats = ensureGlobalStats(null); banks['sys_wrong'].data = []; banks['sys_star'].data = []; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } } saveBanks(true); saveGlobalStats(); clearAllStates(); SafeStorage.remove('exam_last_report'); setNeedSync(false); alert("✅ 重置完成"); location.reload(); }, 3); }
     };
 
     window.onload = function() { 
         renderBankList(); updateDashboard(); initUIState(); applyFoldState(); applyQuizSettingsState(); setNeedSync(needSync); 
         let savedToken = SafeStorage.get('exam_github_token'); if(savedToken) $('github-token-input').value = savedToken; 
-        if(isTestMode) {
-            $('test-console').classList.remove('hidden'); let tBtn = $('test-mode-toggle-btn'); tBtn.innerText = "关闭测试模式 (将核爆清空所有假数据)"; tBtn.className = "btn btn-danger";
-            $('btn-cloud-backup').disabled = true; $('btn-cloud-restore').disabled = true;
-        }
+        if(isTestMode) { $('test-console').classList.remove('hidden'); let tBtn = $('test-mode-toggle-btn'); tBtn.innerText = "关闭测试模式 (将核爆清空所有假数据)"; tBtn.className = "btn btn-danger"; $('btn-cloud-backup').disabled = true; $('btn-cloud-restore').disabled = true; }
         if(SafeStorage.get('exam_last_report')) $('recovery-banner').classList.remove('hidden');
     };
     
@@ -614,7 +622,7 @@
     function applyQuizSettingsState() {
         const panel = $('quiz-settings-panel'); const btn = $('quiz-settings-btn');
         if (isSettingsOpen) { panel.classList.remove('hidden'); btn.innerText = '收起设置 ▲'; btn.style.color = '#64748b'; btn.style.background = '#f1f5f9'; btn.style.borderColor = '#cbd5e1'; } 
-        else { panel.classList.add('hidden'); btn.innerText = '⚙️ 展开偏好设置'; btn.style.color = '#3b82f6'; btn.style.background = '#eff6ff'; btn.style.borderColor = '#bfdbfe'; }
+        else { panel.classList.add('hidden'); btn.innerText = '⚙️ 偏好设置'; btn.style.color = '#3b82f6'; btn.style.background = '#eff6ff'; btn.style.borderColor = '#bfdbfe'; }
     }
     
     function initUIState() { let customCount = 0; for (let id in banks) { if(!banks[id].isSystem) customCount++; } if (customCount > 0) hideImportSection(); else showImportSection(); }
@@ -634,10 +642,8 @@
         $('honor-hard').innerText = globalStats.challenge.hard || 0; $('honor-extreme').innerText = globalStats.challenge.extreme || 0;
 
         ['easy', 'normal', 'hard', 'extreme'].forEach(mode => {
-            let el = $(`arena-${mode}`); let msgEl = $(`lock-msg-${mode}`);
-            let reqQ = UNLOCK_REQS_Q[mode]; let reqC = UNLOCK_REQS_C[mode]; let preReqMode = UNLOCK_PRE[mode];
+            let el = $(`arena-${mode}`); let msgEl = $(`lock-msg-${mode}`); let reqQ = UNLOCK_REQS_Q[mode]; let reqC = UNLOCK_REQS_C[mode]; let preReqMode = UNLOCK_PRE[mode];
             let isQLocked = totalQ < reqQ; let isCLocked = globalStats.totalCorrect < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
-
             if(isQLocked || isCLocked || isPreLocked) { el.classList.add('locked-mode'); let lockReasons = []; if(isPreLocked) lockReasons.push(`需先通关[${PRE_NAMES[preReqMode]}]`); if(isQLocked) lockReasons.push(`库容>${reqQ}`); if(isCLocked) lockReasons.push(`答对>${reqC}`); msgEl.innerHTML = '🔒 锁定: ' + lockReasons.join(' <br> ');
             } else { el.classList.remove('locked-mode'); msgEl.innerText = ''; }
         });
@@ -649,9 +655,7 @@
     function cloudRestoreFlow() { if(isTestMode) return alert("⛔ 沙盒严禁拉取！"); let token = $('github-token-input').value.trim(); if(!token) return alert("请填写 GitHub 密钥！"); SysModal.show("⚠️ 覆盖警告", "本地所有进度将完全被抹除替换！", true, () => { executeCloudRestore(token); }); }
 
     async function executeCloudBackup(token) {
-        SafeStorage.set('exam_github_token', token); 
-        // 【核心修复 Bug 2】云端备份同步所有独立的存档槽位
-        let payloadStr = JSON.stringify({ version: "0.2", banks: banks, states: getAllStates(), stats: globalStats });
+        SafeStorage.set('exam_github_token', token); let payloadStr = JSON.stringify({ version: "0.2", banks: banks, states: getAllStates(), stats: globalStats });
         const btn = $('btn-cloud-backup'); let oriHtml = btn.innerHTML; btn.innerHTML = "⏳ 加密上传中..."; btn.disabled = true;
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }}); if(!res.ok) throw new Error("密钥验证失败");
@@ -669,14 +673,8 @@
             let gists = await res.json(); let targetGist = gists.find(g => g.files['exam_backup.json'] || g.files['szys_backup.json']); if(!targetGist) throw new Error("云端未找备份数据");
             let rawUrl = targetGist.files['exam_backup.json'] ? targetGist.files['exam_backup.json'].raw_url : targetGist.files['szys_backup.json'].raw_url;
             let importedData = await (await fetch(rawUrl + (rawUrl.includes('?') ? '&' : '?') + 't=' + Date.now())).json();
-            
             if (importedData.banks) { banks = ensureSystemBanks(importedData.banks); globalStats = ensureGlobalStats(importedData.stats); } else { banks = ensureSystemBanks(importedData); }
-            
-            // 【核心修复 Bug 2】云端覆盖恢复多槽位存档
-            clearAllStates();
-            if (importedData.states) { for (let k in importedData.states) SafeStorage.set(k, JSON.stringify(importedData.states[k])); } 
-            else if (importedData.state && importedData.state.bankId) { SafeStorage.set('exam_state_' + importedData.state.bankId, JSON.stringify(importedData.state)); }
-            
+            clearAllStates(); if (importedData.states) { for (let k in importedData.states) SafeStorage.set(k, JSON.stringify(importedData.states[k])); } else if (importedData.state && importedData.state.bankId) { SafeStorage.set('exam_state_' + importedData.state.bankId, JSON.stringify(importedData.state)); }
             saveBanks(true); saveGlobalStats(true); setNeedSync(false); alert(`✅ 云端覆盖成功！`); location.reload();
         } catch(e) { alert("❌ 恢复出错：" + e.message); } finally { btn.innerText = oriTxt; btn.disabled = false; }
     }
@@ -685,14 +683,7 @@
     function importLocalData(event) {
         let file = event.target.files[0]; if (!file) return; let reader = new FileReader();
         reader.onload = function(e) {
-            try { 
-                let importedData = JSON.parse(e.target.result); 
-                if (importedData.banks) { banks = ensureSystemBanks(importedData.banks); globalStats = ensureGlobalStats(importedData.stats); } else { banks = ensureSystemBanks(importedData); }
-                clearAllStates();
-                if (importedData.states) { for (let k in importedData.states) SafeStorage.set(k, JSON.stringify(importedData.states[k])); } 
-                else if (importedData.state && importedData.state.bankId) { SafeStorage.set('exam_state_' + importedData.state.bankId, JSON.stringify(importedData.state)); }
-                saveBanks(true); saveGlobalStats(); setNeedSync(true); alert(`✅ 本地恢复成功！`); location.reload();
-            } catch(err) { alert("文件解析错误。"); }
+            try { let importedData = JSON.parse(e.target.result); if (importedData.banks) { banks = ensureSystemBanks(importedData.banks); globalStats = ensureGlobalStats(importedData.stats); } else { banks = ensureSystemBanks(importedData); } clearAllStates(); if (importedData.states) { for (let k in importedData.states) SafeStorage.set(k, JSON.stringify(importedData.states[k])); } else if (importedData.state && importedData.state.bankId) { SafeStorage.set('exam_state_' + importedData.state.bankId, JSON.stringify(importedData.state)); } saveBanks(true); saveGlobalStats(); setNeedSync(true); alert(`✅ 本地恢复成功！`); location.reload(); } catch(err) { alert("文件解析错误。"); }
         }; reader.readAsText(file); event.target.value = '';
     }
 
@@ -707,51 +698,101 @@
     function saveNewBank() { let qs = parseInput(); if(!qs) return; let name = $('new-bank-name').value.trim(); if(!name) return alert("请命名"); let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs, completed: false, maxRate: 0 }; saveBanks(); renderBankList(); initUIState(); $('data-input').value = ''; $('new-bank-name').value = ''; alert(`✅ 保存成功`); }
     function appendToBank() { let qs = parseInput(); if(!qs) return; let bankId = $('exist-bank-select').value; if(!bankId) return alert("请选择题库"); if(banks[bankId] && banks[bankId].isSystem) return alert("系统题库不可追加！"); let bank = banks[bankId]; let existFps = new Set(bank.data.map(q => getFingerprint(q.question))); let added = 0, dup = 0; qs.forEach(q => { let fp = getFingerprint(q.question); if(!existFps.has(fp)) { bank.data.push(q); existFps.add(fp); added++; } else { dup++; } }); bank.completed = false; bank.maxRate = 0; saveBanks(); renderBankList(); $('data-input').value = ''; alert(`✅ 新增 ${added} 道，拦截 ${dup} 道重复`); }
     
-    function deleteBank(id) { 
-        if(banks[id] && banks[id].isSystem) return alert("系统库不可删除"); 
-        if(confirm(`确定删除吗？`)) { 
-            delete banks[id]; saveBanks(); 
-            SafeStorage.remove('exam_state_' + id); // 连同独立存档一起删除
-            renderBankList(); initUIState();
-        } 
-    }
-    
-    function buildBankCardHTML(id, b, isSys, hasResume) {
-        let btnTxt = isSys ? (b.data.length===0?'暂无数据':(hasResume?'继续清剿':'开始攻克')) : (hasResume?'继续作答':'开始作答');
-        let btnCls = (b.data.length===0 && isSys) ? 'btn disabled' : (hasResume?'btn-primary':'btn');
-        let metaHtml = isSys ? `<span class="bank-meta-tag">收录 ${b.data.length} 题</span>` : `<span class="bank-meta-tag">共 ${b.data.length} 题</span><span class="bank-meta-tag highlight">★ 最高 ${b.maxRate || 0}%</span>`;
-        let headerRight = isSys ? '' : `<div class="bank-delete-text" onclick="deleteBank('${id}')">删除</div>`;
-        let stamp = (!isSys && b.completed) ? `<div class="stamp-completed">已完成</div>` : '';
-        return `${stamp}<div class="bank-header-row"><div class="bank-title">${b.name}</div>${headerRight}</div><div class="bank-meta-row">${metaHtml}</div><button class="btn ${btnCls}" style="margin-bottom:0; margin-top:4px;" ${b.data.length===0 && isSys?'disabled':''} onclick="startQuiz('${id}', ${hasResume})">${btnTxt}</button>`;
+    // 【核心交互 Bug 修复】确认删除使用无延迟强制提示 (参数 waitSec 设为 0)
+    window.confirmDeleteBank = function(id, name) { 
+        SysModal.show("删除题库", `确定要删除题库<br><b>【${name}】</b> 吗？<br><br><span style="color:#ef4444;font-size:12px;">🚨 此操作不可逆，且对应的独立存档将被一并抹除。</span>`, true, () => {
+            delete banks[id]; saveBanks(); SafeStorage.remove('exam_state_' + id); renderBankList(); initUIState();
+        }, 0); 
+    };
+
+    // --- 【左滑交互处理引擎】 ---
+    let swipeStartX = 0, swipeStartY = 0;
+    window.handleTs = function(e) { swipeStartX = e.touches[0].clientX; swipeStartY = e.touches[0].clientY; };
+    window.handleTe = function(e, id) {
+        let endX = e.changedTouches[0].clientX, endY = e.changedTouches[0].clientY;
+        if(Math.abs(endY - swipeStartY) > 30) return; // 容错垂直滚动
+        let el = $('bank-item-' + id); if(!el) return;
+        if (swipeStartX - endX > 40) { 
+            document.querySelectorAll('.bank-item.swiped').forEach(x => x.classList.remove('swiped'));
+            el.classList.add('swiped'); 
+        } else if (endX - swipeStartX > 40) { el.classList.remove('swiped'); }
+    };
+    window.handleBankClick = function(e, id, hasResume) {
+        let el = $('bank-item-' + id);
+        if (el && el.classList.contains('swiped')) { el.classList.remove('swiped'); return; }
+        startQuiz(id, hasResume);
+    };
+
+    let currentSearchTerm = "";
+    window.onSearchBank = function(term) { currentSearchTerm = term.trim().toLowerCase(); renderBankList(); };
+
+    // --- 【UI V0.4.0 渲染引擎重构】 ---
+    function buildCompactCardHTML(id, b, isSys, hasResume, isGraduated) {
+        let metaHtml = isSys ? `<span style="color:#059669;">收录 ${b.data.length} 题</span>` : `共 ${b.data.length} 题 <span style="margin:0 6px; color:#cbd5e1;">|</span> 最高 ${b.maxRate || 0}%`;
+        let iconClass = isSys ? 'bank-action-icon sys-icon' : (hasResume ? 'bank-action-icon resume' : 'bank-action-icon');
+        let iconText = hasResume ? '▶' : '〉';
+        
+        let cardContent = `
+            <div class="bank-item ${isSys ? 'sys-item' : ''}" id="bank-item-${id}" onclick="handleBankClick(event, '${id}', ${hasResume})" ${isSys ? '' : `ontouchstart="handleTs(event)" ontouchend="handleTe(event, '${id}')"`}>
+                <div class="bank-info">
+                    <div class="bank-name" style="${isGraduated ? 'color:#94a3b8; text-decoration:line-through;' : ''}">${b.name}</div>
+                    <div class="bank-meta">${metaHtml}</div>
+                </div>
+                <div class="${iconClass}">${iconText}</div>
+            </div>
+        `;
+        if (isSys) return `<div class="bank-item-wrapper sys-wrapper">${cardContent}</div>`;
+        return `
+            <div class="bank-item-wrapper">
+                <div class="bank-delete-btn" onclick="confirmDeleteBank('${id}', '${b.name.replace(/'/g, "\\'")}')">删除</div>
+                ${cardContent}
+            </div>
+        `;
     }
 
     function renderBankList() {
-        const sysList = $('sys-bank-list'); const customList = $('bank-list'); const sel = $('exist-bank-select');
-        sysList.innerHTML = ''; customList.innerHTML = ''; sel.innerHTML = '<option value="">-- 追加至目标题库 --</option>'; let hasCustomBanks = false;
+        const sysList = $('sys-bank-list'); const customList = $('bank-list'); const gradList = $('graduated-bank-list'); const sel = $('exist-bank-select');
+        sysList.innerHTML = ''; customList.innerHTML = ''; gradList.innerHTML = ''; sel.innerHTML = '<option value="">-- 追加至目标题库 --</option>'; 
+        let hasCustomBanks = false, gradCount = 0;
         
+        // 渲染系统库
         ['sys_wrong', 'sys_star'].forEach(id => {
             let b = banks[id]; if(!b || !b.data) return;
-            let div = document.createElement('div'); div.className = `bank-item bank-sys-${b.sysType}`;
+            let div = document.createElement('div');
             let hasResume = !!SafeStorage.get('exam_state_' + id);
-            div.innerHTML = buildBankCardHTML(id, b, true, hasResume); sysList.appendChild(div);
+            div.innerHTML = buildCompactCardHTML(id, b, true, hasResume, false); sysList.appendChild(div);
         });
 
+        // 渲染常规库
         for (let id in banks) {
             if(!banks[id] || !banks[id].data || banks[id].isSystem) continue;
-            hasCustomBanks = true; let b = banks[id];
+            let b = banks[id]; hasCustomBanks = true;
             let opt = document.createElement('option'); opt.value = id; opt.innerText = b.name; sel.appendChild(opt);
-            let div = document.createElement('div'); div.className = b.completed ? 'bank-item bank-completed' : 'bank-item';
+            
+            // 实时搜索过滤
+            if (currentSearchTerm && b.name.toLowerCase().indexOf(currentSearchTerm) === -1) continue;
+
+            let div = document.createElement('div');
             let hasResume = !!SafeStorage.get('exam_state_' + id);
-            div.innerHTML = buildBankCardHTML(id, b, false, hasResume); customList.appendChild(div);
+            
+            if (b.completed) {
+                gradCount++; div.innerHTML = buildCompactCardHTML(id, b, false, hasResume, true); gradList.appendChild(div);
+            } else {
+                div.innerHTML = buildCompactCardHTML(id, b, false, hasResume, false); customList.appendChild(div);
+            }
         }
-        if(!hasCustomBanks) customList.innerHTML = '<div class="msg-empty-box">暂无自定义题库，请点击 [⚙️ 控制面板] 导入</div>';
+        
+        if(!hasCustomBanks) customList.innerHTML = '<div class="msg-empty-box">暂无自定义题库，请点击左上角 [ ☰ ] 导入</div>';
+        else if (customList.innerHTML === '' && currentSearchTerm) customList.innerHTML = '<div class="msg-empty-box" style="padding:16px;">🔍 没有找到匹配的未毕业题库</div>';
+        
+        $('grad-count').innerText = gradCount;
+        if (gradCount > 0 && (!currentSearchTerm || gradList.innerHTML !== '')) { $('graduated-folder').classList.remove('hidden'); } else { $('graduated-folder').classList.add('hidden'); }
     }
 
     const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null, optShuffle: false, isCompletedBank: false, isSystemBank: false };
     let timerInterval = null;
     const DOM = { title: $('question-text'), opts: $('options-container'), progressFill: $('progress-fill'), progressText: $('progress-text'), feedback: $('feedback-box'), btnAction: $('btn-action'), btnStar: $('btn-star'), timerDisplay: $('timer-display'), material: $('material-container') };
 
-    // 【核心修复 Bug 2】状态保存挂载独立 bankId
     function saveState() { if(App.isChallenge || isTestMode || !App.bankId) return; SafeStorage.set('exam_state_' + App.bankId, JSON.stringify({ bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining, optShuffle: App.optShuffle })); }
     
     function preprocessOptions(dataArray, isShuffle) { dataArray.forEach(q => { let dKeys = Object.keys(q.options).sort(); q.optMap = {}; if (isShuffle) { let oKeys = [...dKeys]; for (let i = oKeys.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]]; } dKeys.forEach((dk, i) => { q.optMap[dk] = oKeys[i]; }); } else { dKeys.forEach(dk => { q.optMap[dk] = dk; }); } }); }
@@ -795,7 +836,6 @@
         if (parsed.hasMaterial) { DOM.material.innerHTML = `<div class="material-box"><div class="material-content collapsed" id="mat-content"><div class="mat-read-title">📖 阅读材料</div><div class="mat-read-text">${parsed.material}</div></div><div class="material-fade" id="mat-fade"></div><div class="material-toggle" id="mat-toggle" onclick="toggleMaterial(this)">📄 展开阅读 ▼</div></div>`; setTimeout(() => { let content = $('mat-content'); if (content && content.scrollHeight <= 100) { $('mat-fade').style.display = 'none'; $('mat-toggle').style.display = 'none'; content.classList.remove('collapsed'); } }, 50); }
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选题' : '单选题'}</span> <span style="font-weight:800;">${parsed.question}</span> ${completedNote} ${sourceHtml}`;
         
-        // 【核心修复 Bug 1】使用严格的 isSameQuestion
         let isStarred = banks['sys_star'] && banks['sys_star'].data && banks['sys_star'].data.some(x => isSameQuestion(x, q));
         DOM.btnStar.innerHTML = isStarred ? '★ 已收藏' : '☆ 收藏本题'; DOM.btnStar.className = isStarred ? 'nav-btn bookmark-btn active' : 'nav-btn bookmark-btn';
         
@@ -806,7 +846,6 @@
 
     function selectOpt(key, type) { if (App.isAnswered) return; if (type === 'single') { App.selected = [key]; DOM.opts.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected')); $(`opt-${key}`).classList.add('selected'); } else { let idx = App.selected.indexOf(key); if (idx > -1) { App.selected.splice(idx, 1); $(`opt-${key}`).classList.remove('selected'); } else { App.selected.push(key); $(`opt-${key}`).classList.add('selected'); } } saveState(); }
     
-    // 【核心修复 Bug 1】收藏功能同样使用严格比对
     function toggleStar() { 
         const q = App.data[App.current]; let starBank = banks['sys_star']; 
         let isStarred = starBank.data.some(x => isSameQuestion(x, q)); 
@@ -825,7 +864,6 @@
     function processAnswer(q) {
         let myAns = App.selected.sort().join(''), rightAns = q.answer.split('').sort().join(''), isRight = (myAns === rightAns); 
         let wrongBank = banks['sys_wrong']; 
-        // 【核心修复 Bug 1】使用 isSameQuestion
         let isStarred = banks['sys_star'] && banks['sys_star'].data && banks['sys_star'].data.some(x => isSameQuestion(x, q)); 
         let fpHash = getHash(getFingerprint(q.question));
         if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { if(!globalStats.attempted.includes(fpHash)) { globalStats.attempted.push(fpHash); globalStats.totalAnswered++; } }
@@ -862,7 +900,6 @@
 
     function showResult() {
         if(timerInterval) clearInterval(timerInterval); 
-        // 【核心修复 Bug 2】正常退出或战报页时，清空当前插槽
         if(!App.isChallenge) SafeStorage.remove('exam_state_' + App.bankId); 
         
         Router.navigate('page-result');
