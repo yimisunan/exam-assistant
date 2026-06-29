@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.9 (架构重构版)</title>
+    <title>考试助手 V0.3.0 (极致瘦身版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -201,23 +201,34 @@
         .epic-modal-desc { color: #92400e !important; }
         .btn-epic { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; border: none; font-size: 17px; margin-bottom: 10px; box-shadow: 0 8px 20px rgba(217,119,6,0.4); padding: 16px; border-radius: 16px;}
         .btn-epic:active { transform: scale(0.96); background: linear-gradient(135deg, #d97706 0%, #b45309 100%); box-shadow: 0 4px 10px rgba(217,119,6,0.3);}
+
+        /* 提纯的 CSS 类 */
+        .msg-empty-box { text-align:center; color:#94a3b8; padding:24px; font-size:14px; border:2px dashed #cbd5e1; border-radius:16px; font-weight:700; }
+        .msg-success-box { text-align:center; color:#10b981; background:#ecfdf5; border-color:#6ee7b7; padding: 20px;}
+        .pc-box { text-align:center; background:#ecfdf5; border: 2px solid #34d399; padding:30px 20px; border-radius:24px; box-shadow:0 10px 30px rgba(16,185,129,0.15); animation: pulse-border 2s infinite; }
+        .pc-icon { font-size: 50px; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(16,185,129,0.4)); }
+        .pc-title { color:#065f46; font-size: 20px; font-weight:900; margin-bottom: 8px; }
+        .pc-desc { color:#0f766e; font-weight:700; font-size: 15px; }
+        .pc-btn { margin-top:20px; background:#059669; color:white; border-color:#059669; border-radius:16px; padding: 12px 24px; font-weight:900; }
+        .mat-read-box { margin-bottom:16px; padding:16px; }
+        .mat-read-title { font-weight:900; color:#1e293b; margin-bottom:6px; font-size:14px; }
+        .mat-read-text { white-space: pre-wrap; text-align: justify; font-size: 14px; font-weight: normal; }
+        .sys-msg-warn { color:#f59e0b; }
+        .sys-msg-err { color:#ef4444; font-weight:900; font-size:16px; }
+        .sys-msg-muted { color:#64748b; }
     </style>
 </head>
 <body>
 
 <div id="drawer-overlay" class="drawer-overlay" onclick="closeDrawer()"></div>
 <div id="side-drawer" class="side-drawer">
-    <div style="font-size: 22px; font-weight: 900; margin-bottom: 24px; padding-left: 8px; color: #0f172a; display: flex; align-items: center; gap: 10px;">
-        ⚙️ 控制面板
-    </div>
-
+    <div style="font-size: 22px; font-weight: 900; margin-bottom: 24px; padding-left: 8px; color: #0f172a; display: flex; align-items: center; gap: 10px;">⚙️ 控制面板</div>
     <div class="fold-wrapper" style="border-color: #3b82f6; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15); cursor: pointer; transform: scale(1.02); margin-bottom: 24px;" onclick="Router.openTutorPage()">
         <div class="fold-header" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-bottom: none;">
             <div class="fold-title" style="color: #1d4ed8; font-size: 18px;">👩‍🏫 错题导师 <span class="fold-meta" style="background: #3b82f6; color: white; border-radius: 8px;">专属沉浸屏</span></div>
             <div class="fold-icon" style="color: #1d4ed8; font-size: 16px;">〉</div>
         </div>
     </div>
-
     <div class="fold-wrapper" id="fold-tools">
         <div class="fold-header" onclick="toggleFold('fold-tools')">
             <div class="fold-title">云端与题库 <span class="fold-meta" id="mini-stats-1">加载中...</span><span id="sync-dot-header" class="sync-alert-badge hidden">需同步!</span></div>
@@ -225,65 +236,35 @@
         </div>
         <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
             <div class="dashboard-card">
-                <div class="dash-item"><div class="dash-num" id="global-total-q">0</div><div class="dash-label">全库题数</div></div>
-                <div class="dash-divider"></div>
-                <div class="dash-item"><div class="dash-num" id="global-total-ans" style="color: #059669;">0</div><div class="dash-label">累计答题</div></div>
-                <div class="dash-divider"></div>
+                <div class="dash-item"><div class="dash-num" id="global-total-q">0</div><div class="dash-label">全库题数</div></div><div class="dash-divider"></div>
+                <div class="dash-item"><div class="dash-num" id="global-total-ans" style="color: #059669;">0</div><div class="dash-label">累计答题</div></div><div class="dash-divider"></div>
                 <div class="dash-item"><div class="dash-num" id="global-total-cor" style="color: #f59e0b;">0</div><div class="dash-label">累计答对</div></div>
             </div>
-            <div id="import-section-collapsed">
-                <button class="btn btn-primary" onclick="showImportSection()" style="margin-top: 10px; background: #e0e7ff; color: #1e40af; border: none; box-shadow: none;">[ + ] 添加新题库</button>
-            </div>
+            <div id="import-section-collapsed"><button class="btn btn-primary" onclick="showImportSection()" style="margin-top: 10px; background: #e0e7ff; color: #1e40af; border: none; box-shadow: none;">[ + ] 添加新题库</button></div>
             <div id="import-section-expanded" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h2 style="margin:0;">导入新题库</h2>
-                    <span style="font-size: 13px; color: #64748b; font-weight:800; cursor: pointer;" onclick="hideImportSection()">收起 ▲</span>
-                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><h2 style="margin:0;">导入新题库</h2><span style="font-size: 13px; color: #64748b; font-weight:800; cursor: pointer;" onclick="hideImportSection()">收起 ▲</span></div>
                 <textarea id="data-input" placeholder="请粘贴 JSON 格式的题库代码..."></textarea>
-                <div class="flex-row">
-                    <input type="text" id="new-bank-name" placeholder="题库名称 (如: 2026年真题)">
-                    <button class="btn btn-primary" onclick="saveNewBank()">保存题库</button>
-                </div>
-                <div class="flex-row">
-                    <select id="exist-bank-select"></select>
-                    <button class="btn" onclick="appendToBank()">追加题目</button>
-                </div>
+                <div class="flex-row"><input type="text" id="new-bank-name" placeholder="题库名称 (如: 2026年真题)"><button class="btn btn-primary" onclick="saveNewBank()">保存题库</button></div>
+                <div class="flex-row"><select id="exist-bank-select"></select><button class="btn" onclick="appendToBank()">追加题目</button></div>
             </div>
             <h2 style="margin-top: 24px;">云端漫游存档</h2>
             <input type="password" id="github-token-input" placeholder="输入 GitHub 密钥 (ghp_ 开头)">
-            <div class="flex-row">
-                <button class="btn btn-primary" id="btn-cloud-backup" onclick="cloudBackupFlow()" style="position:relative;">⬆️ 备份全状态 <span id="sync-dot-btn" class="sync-alert-btn hidden">待备份</span></button>
-                <button class="btn btn-warning" id="btn-cloud-restore" onclick="cloudRestoreFlow()">⬇️ 强制云覆盖</button>
-            </div>
-            <div style="font-size: 13px; color: #94a3b8; text-align:center; font-weight: 700;">
-                离线工具：<a href="#" onclick="exportLocalData()" style="color:#3b82f6; text-decoration:none;">下载备份</a> | <a href="#" onclick="document.getElementById('import-file').click()" style="color:#3b82f6; text-decoration:none;">导入备份</a>
-            </div>
+            <div class="flex-row"><button class="btn btn-primary" id="btn-cloud-backup" onclick="cloudBackupFlow()" style="position:relative;">⬆️ 备份全状态 <span id="sync-dot-btn" class="sync-alert-btn hidden">待备份</span></button><button class="btn btn-warning" id="btn-cloud-restore" onclick="cloudRestoreFlow()">⬇️ 强制云覆盖</button></div>
+            <div style="font-size: 13px; color: #94a3b8; text-align:center; font-weight: 700;">离线工具：<a href="#" onclick="exportLocalData()" style="color:#3b82f6; text-decoration:none;">下载备份</a> | <a href="#" onclick="$('import-file').click()" style="color:#3b82f6; text-decoration:none;">导入备份</a></div>
             <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importLocalData(event)">
         </div></div></div>
     </div>
-
     <div class="fold-wrapper" id="fold-sys" style="border-color: #6ee7b7;">
-        <div class="fold-header" onclick="toggleFold('fold-sys')" style="background: #ecfdf5;">
-            <div class="fold-title" style="color: #047857;">🎯 专项特训 <span class="fold-meta" id="mini-stats-sys" style="background: #d1fae5; color: #065f46;">加载中...</span></div>
-            <div class="fold-icon" style="color: #047857;">▼</div>
-        </div>
+        <div class="fold-header" onclick="toggleFold('fold-sys')" style="background: #ecfdf5;"><div class="fold-title" style="color: #047857;">🎯 专项特训 <span class="fold-meta" id="mini-stats-sys" style="background: #d1fae5; color: #065f46;">加载中...</span></div><div class="fold-icon" style="color: #047857;">▼</div></div>
         <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
-            <p style="font-size:13px; color:#065f46; margin-bottom:16px; font-weight:700; text-align:center; background:#d1fae5; padding:10px; border-radius:10px;">
-                💡 自动收录您的易错点与星标题，答对错题自动核销。
-            </p>
+            <p style="font-size:13px; color:#065f46; margin-bottom:16px; font-weight:700; text-align:center; background:#d1fae5; padding:10px; border-radius:10px;">💡 自动收录您的易错点与星标题，答对错题自动核销。</p>
             <div id="sys-bank-list"></div>
         </div></div></div>
     </div>
-
     <div class="fold-wrapper" id="fold-arena" style="border-color: #fcd34d;">
-        <div class="fold-header" onclick="toggleFold('fold-arena')" style="background: #fffbeb;">
-            <div class="fold-title" style="color: #d97706;">⚔️ 终极竞技场 <span class="fold-meta" id="mini-stats-2" style="background: #fef3c7; color: #b45309;">荣誉加载中...</span></div>
-            <div class="fold-icon" style="color: #d97706;">▼</div>
-        </div>
+        <div class="fold-header" onclick="toggleFold('fold-arena')" style="background: #fffbeb;"><div class="fold-title" style="color: #d97706;">⚔️ 终极竞技场 <span class="fold-meta" id="mini-stats-2" style="background: #fef3c7; color: #b45309;">荣誉加载中...</span></div><div class="fold-icon" style="color: #d97706;">▼</div></div>
         <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
-            <p style="font-size:13px; color:#b45309; margin-bottom:16px; font-weight:700; text-align:center; background:#fef3c7; padding:10px; border-radius:10px;">
-                💡 智能引擎提示：竞技场抽题将【优先抓取】错题本与收藏夹内容进行弱点强化。
-            </p>
+            <p style="font-size:13px; color:#b45309; margin-bottom:16px; font-weight:700; text-align:center; background:#fef3c7; padding:10px; border-radius:10px;">💡 智能引擎提示：竞技场抽题将【优先抓取】错题本与收藏夹内容进行弱点强化。</p>
             <div class="honor-board">
                 <div class="honor-item" style="color:#059669;"><div class="honor-num" id="honor-easy">0</div><div class="honor-label">简单过关</div></div>
                 <div class="honor-item" style="color:#2563eb;"><div class="honor-num" id="honor-normal">0</div><div class="honor-label">普通过关</div></div>
@@ -291,36 +272,18 @@
                 <div class="honor-item" style="color:#d97706;"><div class="honor-num" id="honor-extreme">0</div><div class="honor-label">极限登顶</div></div>
             </div>
             <div class="arena-grid">
-                <div class="arena-card arena-easy" id="arena-easy" onclick="startChallenge('easy')">
-                    <div><h3>简单模式</h3><p>随机 10 题<br>小试牛刀</p></div>
-                    <span class="lock-msg" id="lock-msg-easy"></span>
-                </div>
-                <div class="arena-card arena-normal" id="arena-normal" onclick="startChallenge('normal')">
-                    <div><h3>普通模式</h3><p>随机 30 题<br>中度抗压</p></div>
-                    <span class="lock-msg" id="lock-msg-normal"></span>
-                </div>
-                <div class="arena-card arena-hard" id="arena-hard" onclick="startChallenge('hard')">
-                    <div><h3>困难模式</h3><p>随机 60 题<br>毅力考验</p></div>
-                    <span class="lock-msg" id="lock-msg-hard"></span>
-                </div>
-                <div class="arena-card arena-extreme" id="arena-extreme" onclick="startChallenge('extreme')">
-                    <div><h3>极限模式</h3><p>随机 90 题<br>限时 90 分钟</p></div>
-                    <span class="lock-msg" id="lock-msg-extreme"></span>
-                </div>
+                <div class="arena-card arena-easy" id="arena-easy" onclick="startChallenge('easy')"><div><h3>简单模式</h3><p>随机 10 题<br>小试牛刀</p></div><span class="lock-msg" id="lock-msg-easy"></span></div>
+                <div class="arena-card arena-normal" id="arena-normal" onclick="startChallenge('normal')"><div><h3>普通模式</h3><p>随机 30 题<br>中度抗压</p></div><span class="lock-msg" id="lock-msg-normal"></span></div>
+                <div class="arena-card arena-hard" id="arena-hard" onclick="startChallenge('hard')"><div><h3>困难模式</h3><p>随机 60 题<br>毅力考验</p></div><span class="lock-msg" id="lock-msg-hard"></span></div>
+                <div class="arena-card arena-extreme" id="arena-extreme" onclick="startChallenge('extreme')"><div><h3>极限模式</h3><p>随机 90 题<br>限时 90 分钟</p></div><span class="lock-msg" id="lock-msg-extreme"></span></div>
             </div>
         </div></div></div>
     </div>
-
     <div class="fold-wrapper" id="fold-dev" style="border-color: #fecaca; margin-top: 40px;">
-        <div class="fold-header" onclick="toggleFold('fold-dev')" style="background: #fef2f2;">
-            <div class="fold-title" style="color: #dc2626;">🛠️ 开发者选项</div>
-            <div class="fold-icon" style="color: #dc2626;">▼</div>
-        </div>
+        <div class="fold-header" onclick="toggleFold('fold-dev')" style="background: #fef2f2;"><div class="fold-title" style="color: #dc2626;">🛠️ 开发者选项</div><div class="fold-icon" style="color: #dc2626;">▼</div></div>
         <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
             <h3 style="font-size: 15px; color: #1e293b; margin-bottom: 10px; font-weight:800;">🧪 实验性功能 (Beta)</h3>
-            <div class="controls" style="background: #ffffff; border-color: #e2e8f0; margin-bottom: 24px;">
-                <label><input type="checkbox" id="opt-shuffle-cb"> 强制选项乱序 (防背与防幻觉双擎激活)</label>
-            </div>
+            <div class="controls" style="background: #ffffff; border-color: #e2e8f0; margin-bottom: 24px;"><label><input type="checkbox" id="opt-shuffle-cb"> 强制选项乱序 (防背与防幻觉双擎激活)</label></div>
             <h3 style="font-size: 15px; color: #1e293b; margin-bottom: 10px; font-weight:800;">🚧 沙盒测试环境</h3>
             <button class="btn btn-warning" id="test-mode-toggle-btn" onclick="SandboxEngine.toggleTestMode()">开启测试模式 (注入假数据测试解锁)</button>
             <p style="font-size: 13px; color: #64748b; margin-top: 6px; margin-bottom: 24px; font-weight:600;">需在纯净态下开启，开启后强制禁用云端。</p>
@@ -332,23 +295,15 @@
 </div>
 
 <div id="page-home" class="container">
-    <div class="main-header">
-        <div class="hamburger-btn" onclick="openDrawer()">☰</div>
-        <div class="main-title">考试助手</div>
-        <span id="sync-dot-global" class="sync-alert-badge hidden">需同步!</span>
-    </div>
-
+    <div class="main-header"><div class="hamburger-btn" onclick="openDrawer()">☰</div><div class="main-title">考试助手</div><span id="sync-dot-global" class="sync-alert-badge hidden">需同步!</span></div>
     <div id="recovery-banner" class="hidden" style="background: #eff6ff; border: 2px dashed #3b82f6; padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);">
-        <div style="font-size: 17px; font-weight: 900; color: #1e40af; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            📋 发现未处理完毕的战报快照
-        </div>
+        <div style="font-size: 17px; font-weight: 900; color: #1e40af; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">📋 发现未处理完毕的战报快照</div>
         <p style="font-size: 14px; color: #3b82f6; margin-bottom: 16px; text-align: center; font-weight: 700;">上次练习的错题提取进程被意外中断。<br>快照已为您安全驻留，是否立即恢复？</p>
         <div class="flex-row" style="justify-content: center; gap: 12px; margin-bottom: 0;">
             <button class="btn btn-primary" style="margin-bottom: 0; padding: 12px 24px; border-radius: 12px;" onclick="restoreLastReport()">⚡ 立即恢复战场</button>
             <button class="btn" style="margin-bottom: 0; padding: 12px 24px; background: #fff; border-color: #bfdbfe; color: #60a5fa; border-radius: 12px;" onclick="dismissLastReport()">清除并忽略</button>
         </div>
     </div>
-
     <div class="test-console hidden" id="test-console">
         <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
         <p style="font-size:13px; color:#b45309; margin-bottom:14px; font-weight:700;">高级开发者专属武器库，请点击以快速验证系统极端边界。</p>
@@ -367,109 +322,59 @@
     <div class="main-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="margin-bottom: 0; font-size: 19px; font-weight:900;">📚 常规练习库</h2>
-            <div style="font-size: 14px; color: #3b82f6; cursor: pointer; font-weight: 800; padding: 6px 14px; background: #eff6ff; border-radius: 10px; transition: all 0.2s;" onclick="toggleQuizSettings()" id="quiz-settings-btn">
-                ⚙️ 展开偏好设置
-            </div>
+            <div style="font-size: 14px; color: #3b82f6; cursor: pointer; font-weight: 800; padding: 6px 14px; background: #eff6ff; border-radius: 10px; transition: all 0.2s;" onclick="toggleQuizSettings()" id="quiz-settings-btn">⚙️ 展开偏好设置</div>
         </div>
-
         <div class="controls hidden" id="quiz-settings-panel" style="margin-bottom: 24px;">
-            <div style="flex: 1; min-width: 90px;">
-                <div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">答题模式</div>
-                <label><input type="radio" name="mode" value="exam"> 考试统分</label>
-                <label><input type="radio" name="mode" value="instant" checked> 边答边看</label>
-            </div>
-            <div style="flex: 1; min-width: 90px;">
-                <div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">题目顺序</div>
-                <label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label>
-            </div>
-            <div style="flex: 1; min-width: 110px;">
-                <div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">限时挑战</div>
-                <label><input type="checkbox" id="timer-cb" onclick="document.getElementById('timer-input-box').style.display = this.checked ? 'block' : 'none'"> 开启倒计时</label>
-                <div id="timer-input-box" style="display:none; margin-top:6px;">
-                    <input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:65px; padding:8px; text-align:center; display:inline-block; border-radius:8px;">分钟
-                </div>
+            <div style="flex: 1; min-width: 90px;"><div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">答题模式</div><label><input type="radio" name="mode" value="exam"> 考试统分</label><label><input type="radio" name="mode" value="instant" checked> 边答边看</label></div>
+            <div style="flex: 1; min-width: 90px;"><div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">题目顺序</div><label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label></div>
+            <div style="flex: 1; min-width: 110px;"><div style="color:#94a3b8; margin-bottom:8px; font-size:13px; font-weight:800;">限时挑战</div><label><input type="checkbox" id="timer-cb" onclick="$('timer-input-box').style.display = this.checked ? 'block' : 'none'"> 开启倒计时</label>
+                <div id="timer-input-box" style="display:none; margin-top:6px;"><input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:65px; padding:8px; text-align:center; display:inline-block; border-radius:8px;">分钟</div>
             </div>
         </div>
-        
         <div id="bank-list"></div>
     </div>
 </div>
 
 <div class="container hidden" id="page-quiz">
     <div class="nav-header">
-        <div class="nav-btn" id="nav-btn-back" onclick="location.reload()">〈 保存并退出</div>
-        <div class="nav-title" id="progress-text">1 / 10</div>
-        <div class="nav-btn bookmark-btn" id="btn-star" onclick="toggleStar()">☆ 收藏</div>
+        <div class="nav-btn" id="nav-btn-back" onclick="location.reload()">〈 保存并退出</div><div class="nav-title" id="progress-text">1 / 10</div><div class="nav-btn bookmark-btn" id="btn-star" onclick="toggleStar()">☆ 收藏</div>
     </div>
-    
-    <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill"></div>
-    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
     <span class="timer-badge hidden" id="timer-display">倒计时 00:00</span>
-    
-    <div id="material-container"></div>
-
-    <div class="question-title" id="question-text"></div>
-    <div id="options-container"></div>
-    
-    <div class="feedback-box hidden" id="feedback-box"></div>
-    
+    <div id="material-container"></div><div class="question-title" id="question-text"></div><div id="options-container"></div><div class="feedback-box hidden" id="feedback-box"></div>
     <button class="btn btn-primary" id="btn-action" onclick="handleAction()" style="margin-top: 20px; padding: 16px; font-size: 17px; border-radius:16px;">确认选择</button>
     <button class="btn btn-danger" id="btn-quit" onclick="giveUpQuiz()" style="border-radius:16px; padding:16px;">放弃进度，清空重卷</button>
 </div>
 
 <div class="container hidden" id="page-result">
-    <div id="challenge-feedback" class="hidden">
-        <div class="cf-title" id="cf-title"></div>
-        <div class="cf-desc" id="cf-desc"></div>
-    </div>
-
+    <div id="challenge-feedback" class="hidden"><div class="cf-title" id="cf-title"></div><div class="cf-desc" id="cf-desc"></div></div>
     <h2 style="text-align: center; border: none; font-size: 24px; padding: 0; font-weight:900;" id="result-page-title">练习战报</h2>
     <div style="font-size: 56px; color: #3b82f6; font-weight: 900; text-align: center; margin: 16px 0; text-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);" id="score-text"></div>
     <div style="text-align: center; color: #64748b; font-size: 16px; margin-bottom: 32px; font-weight: 700;" id="stat-text"></div>
-    
     <div class="flex-row" style="background:#f8fafc; padding:20px; border:2px solid #e2e8f0; border-radius:16px; justify-content:center; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
-        <label style="font-size:15px; color:#475569; font-weight: 800;">提取分批设定：</label>
-        <input type="number" id="chunk-size-input" value="5" min="1" max="50" style="width:70px; margin-bottom:0; text-align:center; padding:10px; border-radius:10px; font-weight:800;">
-        <label style="font-size:15px; color:#475569; margin-right:12px; font-weight:700;">题 / 批</label>
-        <button class="btn btn-primary" style="margin:0; padding:10px 20px; line-height:normal; border-radius:10px;" onclick="renderChunks()">应用</button>
+        <label style="font-size:15px; color:#475569; font-weight: 800;">提取分批设定：</label><input type="number" id="chunk-size-input" value="5" min="1" max="50" style="width:70px; margin-bottom:0; text-align:center; padding:10px; border-radius:10px; font-weight:800;"><label style="font-size:15px; color:#475569; margin-right:12px; font-weight:700;">题 / 批</label><button class="btn btn-primary" style="margin:0; padding:10px 20px; line-height:normal; border-radius:10px;" onclick="renderChunks()">应用</button>
     </div>
-
     <div id="chunks-container" style="margin-top: 28px;"></div>
     <button class="btn btn-primary" style="margin-top: 28px; padding: 18px; font-size: 17px; border-radius:16px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);" onclick="clearReportAndReload()">标记处理完成，返回主页</button>
 </div>
 
 <div class="container hidden" id="page-tutor" style="background: #f4f6f8; min-height: 100vh; padding-bottom: 40px;">
     <div class="nav-header" style="background:#fff; margin:-12px -12px 20px -12px; padding:16px 20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:none;">
-        <div class="nav-btn" onclick="Router.closeTutorPage()" style="background:#f1f5f9; color:#475569;">〈 返回主页</div>
-        <div class="nav-title" style="color:#0f766e; font-size:19px; font-weight:900;">👩‍🏫 错题名师答疑屏</div>
-        <div class="nav-btn" style="visibility:hidden;">占位</div>
+        <div class="nav-btn" onclick="Router.closeTutorPage()" style="background:#f1f5f9; color:#475569;">〈 返回主页</div><div class="nav-title" style="color:#0f766e; font-size:19px; font-weight:900;">👩‍🏫 错题名师答疑屏</div><div class="nav-btn" style="visibility:hidden;">占位</div>
     </div>
-    
     <div class="tutor-progress-container" id="tutor-progress-box">
-        <div class="tutor-progress-text">
-            <span>当前通关进度</span>
-            <span id="tutor-progress-count" style="color:#10b981;">0 / 0</span>
-        </div>
-        <div class="progress-wrapper" style="margin-bottom:0; height:12px; border-radius:6px; background:#f1f5f9;">
-            <div class="progress-fill" id="tutor-progress-fill" style="width: 0%; border-radius:6px;"></div>
-        </div>
+        <div class="tutor-progress-text"><span>当前通关进度</span><span id="tutor-progress-count" style="color:#10b981;">0 / 0</span></div>
+        <div class="progress-wrapper" style="margin-bottom:0; height:12px; border-radius:6px; background:#f1f5f9;"><div class="progress-fill" id="tutor-progress-fill" style="width: 0%; border-radius:6px;"></div></div>
     </div>
-
-    <p style="font-size:14px; color:#0f766e; margin-bottom:20px; font-weight:700; text-align:center; background:#ccfbf1; padding:14px; border-radius:14px; border:2px dashed #5eead4;">
-        💡 请将 AI 导师返回的 JSON 解析胶囊粘贴至下方输入框，开启您的沉浸式通关之旅。
-    </p>
-    
+    <p style="font-size:14px; color:#0f766e; margin-bottom:20px; font-weight:700; text-align:center; background:#ccfbf1; padding:14px; border-radius:14px; border:2px dashed #5eead4;">💡 请将 AI 导师返回的 JSON 解析胶囊粘贴至下方输入框，开启您的沉浸式通关之旅。</p>
     <textarea id="tutor-input" placeholder="请粘贴 AI 返回的纯 JSON 数组代码..." style="height: 140px; font-family: monospace; border-color:#99f6e4; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
     <button class="btn" style="background: #0ea5e9; color: white; border-color: #0ea5e9; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3); padding: 16px; font-size: 17px; font-weight:900; border-radius:16px;" onclick="generateTutorCards()">✨ 召唤名师深度解析</button>
-    
     <div id="tutor-cards-container" style="margin-top: 28px;"></div>
 </div>
 
 <div class="sys-modal-overlay hidden" id="sys-modal">
     <div class="sys-modal-box">
-        <div class="sys-modal-title" id="modal-title">提示</div>
-        <div class="sys-modal-desc" id="modal-desc">内容</div>
+        <div class="sys-modal-title" id="modal-title">提示</div><div class="sys-modal-desc" id="modal-desc">内容</div>
         <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认 (3s)</button>
         <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569; padding: 14px; border-radius: 12px; font-size: 16px;">取消</button>
     </div>
@@ -478,22 +383,23 @@
 <div class="sys-modal-overlay hidden" id="epic-modal">
     <div class="sys-modal-box epic-modal-box">
         <div style="font-size: 56px; margin-bottom: 16px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.3));">🏆</div>
-        <div class="sys-modal-title epic-modal-title" id="epic-title">史诗成就达成</div>
-        <div class="sys-modal-desc epic-modal-desc" id="epic-desc">描述内容</div>
+        <div class="sys-modal-title epic-modal-title" id="epic-title">史诗成就达成</div><div class="sys-modal-desc epic-modal-desc" id="epic-desc">描述内容</div>
         <button class="btn btn-epic" onclick="epicCloudBackupFlow()">✨ 立即一键封存至云端</button>
-        <button class="btn" style="background: transparent; border: 2px solid #fcd34d; color: #b45309; padding: 14px; border-radius: 14px; font-weight:800;" onclick="document.getElementById('epic-modal').classList.add('hidden')">稍后再说</button>
+        <button class="btn" style="background: transparent; border: 2px solid #fcd34d; color: #b45309; padding: 14px; border-radius: 14px; font-weight:800;" onclick="$('epic-modal').classList.add('hidden')">稍后再说</button>
     </div>
 </div>
 
 <script>
-    // --- 核心工具：安全存储引擎 (防 5MB 爆仓拦截) ---
+    // --- 极简 DOM 宏 ---
+    const $ = id => document.getElementById(id);
+
+    // --- 安全存储引擎 ---
     const SafeStorage = {
         set: function(key, value) {
             try { localStorage.setItem(key, value); return true; }
             catch (e) {
-                if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                    alert("🚨 系统警告：您的本地存储空间已满 (约 5MB 限制)！\n\n为了防止数据丢失，请立即前往【控制面板】执行云端备份，并删除部分已毕业题库。");
-                } else { console.error("写入失败:", e); }
+                if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') alert("🚨 警告：本地存储已满！\n请前往【控制面板】执行云端备份，并删除部分已毕业题库。");
+                else console.error("写入失败:", e);
                 return false;
             }
         },
@@ -501,20 +407,17 @@
         remove: function(key) { localStorage.removeItem(key); }
     };
 
-    // --- 核心工具：基础函数 ---
+    // --- 核心工具 ---
     function getHash(str) { let hash = 0; for (let i = 0; i < str.length; i++) { let chr = str.charCodeAt(i); hash = ((hash << 5) - hash) + chr; hash |= 0; } return hash.toString(36); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     function cleanQuestionForStorage(q) { let copy = JSON.parse(JSON.stringify(q)); delete copy.optMap; return copy; }
 
-    // --- 核心工具：公共材料解析引擎 (避免正则复写重复) ---
     function parseMaterialText(rawQ) {
-        let matRegex = /\[材料原文[：:]([\s\S]*?)\]([\s\S]*)/;
-        let match = rawQ.match(matRegex);
+        let match = rawQ.match(/\[材料原文[：:]([\s\S]*?)\]([\s\S]*)/);
         if (match) return { material: match[1].trim(), question: match[2].trim(), hasMaterial: true };
         return { material: '', question: rawQ, hasMaterial: false };
     }
 
-    // --- 核心工具：数据结构收敛初始化 ---
     function ensureSystemBanks(targetBanks) {
         if (!targetBanks['sys_wrong']) targetBanks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
         if (!targetBanks['sys_star']) targetBanks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
@@ -522,148 +425,89 @@
     }
     function ensureGlobalStats(stats) {
         if (!stats) stats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
-        if (stats.totalCorrect === undefined) stats.totalCorrect = 0;
-        if (stats.totalAnswered === undefined) stats.totalAnswered = 0;
+        if (stats.totalCorrect === undefined) stats.totalCorrect = 0; if (stats.totalAnswered === undefined) stats.totalAnswered = 0;
         if (!stats.challenge) stats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
-        if (!stats.mastered) stats.mastered = [];
-        if (!stats.attempted) stats.attempted = [];
+        if (!stats.mastered) stats.mastered = []; if (!stats.attempted) stats.attempted = [];
         return stats;
     }
 
-    // --- 路由与视图控制器 ---
     const Router = {
-        navigate: function(pageId) {
-            const pages = ['page-home', 'page-quiz', 'page-result', 'page-tutor'];
-            pages.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    if (id === pageId) el.classList.remove('hidden');
-                    else el.classList.add('hidden');
-                }
-            });
-            window.scrollTo(0, 0);
-        },
+        navigate: function(pageId) { ['page-home', 'page-quiz', 'page-result', 'page-tutor'].forEach(id => { const el = $(id); if (el) { id === pageId ? el.classList.remove('hidden') : el.classList.add('hidden'); } }); window.scrollTo(0, 0); },
         openTutorPage: function() { closeDrawer(); this.navigate('page-tutor'); },
         closeTutorPage: function() { this.navigate('page-home'); renderBankList(); updateDashboard(); }
     };
 
-    function openDrawer() { document.getElementById('side-drawer').classList.add('open'); document.getElementById('drawer-overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
-    function closeDrawer() { document.getElementById('side-drawer').classList.remove('open'); document.getElementById('drawer-overlay').classList.remove('open'); document.body.style.overflow = ''; }
-    
-    function toggleFold(id) { 
-        let el = document.getElementById(id); el.classList.toggle('open'); 
-        foldState[id] = el.classList.contains('open'); SafeStorage.set('exam_fold_state', JSON.stringify(foldState));
-    }
+    function openDrawer() { $('side-drawer').classList.add('open'); $('drawer-overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function closeDrawer() { $('side-drawer').classList.remove('open'); $('drawer-overlay').classList.remove('open'); document.body.style.overflow = ''; }
+    function toggleFold(id) { let el = $(id); el.classList.toggle('open'); foldState[id] = el.classList.contains('open'); SafeStorage.set('exam_fold_state', JSON.stringify(foldState)); }
 
     window.toggleMaterial = function(btn, uid) {
-        let content = uid ? document.getElementById(`${uid}-content`) : document.getElementById('mat-content');
-        let fade = uid ? document.getElementById(`${uid}-fade`) : document.getElementById('mat-fade');
-        if (content.classList.contains('collapsed')) {
-            content.classList.remove('collapsed'); fade.style.opacity = '0'; setTimeout(() => fade.style.display = 'none', 300); btn.innerText = '收起材料 ▲';
-        } else {
-            content.classList.add('collapsed'); fade.style.display = 'block'; setTimeout(() => fade.style.opacity = '1', 10);
-            btn.innerText = uid ? '📄 展开阅读 ▼' : '📄 展开阅读完整材料 ▼';
-            content.scrollIntoView({behavior: 'smooth', block: 'center'});
-        }
+        let content = uid ? $(`${uid}-content`) : $('mat-content'); let fade = uid ? $(`${uid}-fade`) : $('mat-fade');
+        if (content.classList.contains('collapsed')) { content.classList.remove('collapsed'); fade.style.opacity = '0'; setTimeout(() => fade.style.display = 'none', 300); btn.innerText = '收起材料 ▲';
+        } else { content.classList.add('collapsed'); fade.style.display = 'block'; setTimeout(() => fade.style.opacity = '1', 10); btn.innerText = uid ? '📄 展开阅读 ▼' : '📄 展开阅读完整材料 ▼'; content.scrollIntoView({behavior: 'smooth', block: 'center'}); }
     };
 
-    // --- 导师答疑引擎 ---
     window.tutorTotal = 0; window.tutorDone = 0;
     function updateTutorProgress() {
-        let fill = document.getElementById('tutor-progress-fill'); let count = document.getElementById('tutor-progress-count');
+        let fill = $('tutor-progress-fill'), count = $('tutor-progress-count');
         if(tutorTotal === 0) { fill.style.width = '0%'; count.innerText = `0 / 0`; return; }
         fill.style.width = `${(tutorDone / tutorTotal) * 100}%`; count.innerText = `${tutorDone} / ${tutorTotal}`;
     }
 
     window.generateTutorCards = function() {
-        let raw = document.getElementById('tutor-input').value; if(!raw.trim()) return alert("请先粘贴解析代码");
+        let raw = $('tutor-input').value; if(!raw.trim()) return alert("请先粘贴解析代码");
         raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
         try {
             let data = JSON.parse(raw); if(!Array.isArray(data)) return alert("JSON 格式错误，应为数组形式");
-            
             window.tutorTotal = data.length; window.tutorDone = 0; updateTutorProgress();
-            let container = document.getElementById('tutor-cards-container'); container.innerHTML = '';
+            let container = $('tutor-cards-container'); container.innerHTML = '';
             
-            // O(1) Map 寻址优化，避免大库遍历卡顿
-            let qMap = new Map();
-            for(let k in banks) { if(banks[k] && banks[k].data) { banks[k].data.forEach(q => qMap.set(getFingerprint(q.question), q)); } }
+            let qMap = new Map(); for(let k in banks) { if(banks[k] && banks[k].data) { banks[k].data.forEach(q => qMap.set(getFingerprint(q.question), q)); } }
             
             data.forEach((item, index) => {
                 let card = document.createElement('div'); card.className = 'tutor-card'; card.id = `tcard-${index}`;
-                let rawQ = item.original_question || "题目加载失败";
-                
-                // 【重构】复用提取的解析引擎
-                let parsed = parseMaterialText(rawQ);
-                let displayQ = parsed.question;
-                let matHtml = '';
+                let rawQ = item.original_question || "题目加载失败"; let parsed = parseMaterialText(rawQ); let matHtml = '';
                 
                 if (parsed.hasMaterial) {
                     let uid = 'tmat-' + Date.now() + '-' + index;
-                    matHtml = `
-                        <div class="material-box" style="margin-bottom:16px; padding:16px;">
-                            <div class="material-content collapsed" id="${uid}-content">
-                                <div style="font-weight:900; color:#1e293b; margin-bottom:6px; font-size:14px;">📖 阅读材料</div>
-                                <div style="white-space: pre-wrap; text-align: justify; font-size: 14px; font-weight: normal;">${parsed.material}</div>
-                            </div>
-                            <div class="material-fade" id="${uid}-fade"></div>
-                            <div class="material-toggle" id="${uid}-toggle" onclick="toggleMaterial(this, '${uid}')">📄 展开阅读 ▼</div>
-                        </div>
-                    `;
-                    setTimeout(() => {
-                        let content = document.getElementById(`${uid}-content`);
-                        if (content && content.scrollHeight <= 80) { document.getElementById(`${uid}-fade`).style.display = 'none'; document.getElementById(`${uid}-toggle`).style.display = 'none'; content.classList.remove('collapsed'); }
-                    }, 50);
+                    matHtml = `<div class="mat-read-box material-box"><div class="material-content collapsed" id="${uid}-content"><div class="mat-read-title">📖 阅读材料</div><div class="mat-read-text">${parsed.material}</div></div><div class="material-fade" id="${uid}-fade"></div><div class="material-toggle" id="${uid}-toggle" onclick="toggleMaterial(this, '${uid}')">📄 展开阅读 ▼</div></div>`;
+                    setTimeout(() => { let content = $(`${uid}-content`); if (content && content.scrollHeight <= 80) { $(`${uid}-fade`).style.display = 'none'; $(`${uid}-toggle`).style.display = 'none'; content.classList.remove('collapsed'); } }, 50);
                 }
 
                 let fp = getFingerprint(rawQ); let matchedQ = qMap.get(fp); let optionsHtml = '';
-                
                 if (matchedQ && matchedQ.options) {
                     optionsHtml = '<div style="margin-bottom: 24px;">';
                     Object.keys(matchedQ.options).sort().forEach(k => {
                         let isMy = item.my_answer && item.my_answer.includes(k); let isRight = item.correct_answer && item.correct_answer.includes(k);
-                        let optClass = isRight ? "tutor-opt-right" : (isMy ? "tutor-opt-wrong" : "tutor-opt-normal");
-                        let icon = isRight ? "✔ " : (isMy ? "✖ " : "");
+                        let optClass = isRight ? "tutor-opt-right" : (isMy ? "tutor-opt-wrong" : "tutor-opt-normal"); let icon = isRight ? "✔ " : (isMy ? "✖ " : "");
                         optionsHtml += `<div class="${optClass}">${icon}${k}. ${matchedQ.options[k]}</div>`;
-                    });
-                    optionsHtml += '</div>';
+                    }); optionsHtml += '</div>';
                 } else { optionsHtml = `<div class="tutor-opt-wrong">✖ 我的作答：${item.my_answer || '未作答'}</div><div class="tutor-opt-right">✔ 官方标答：${item.correct_answer || '未知'}</div>`; }
 
                 let safeQ = rawQ.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
-                card.innerHTML = `
-                    ${matHtml} <div class="tutor-q">${displayQ}</div> ${optionsHtml}
-                    <div class="tutor-exp-box"><div class="tutor-exp-title">👨‍🏫 名师点拨</div><div class="tutor-exp-text">${item.explanation || '暂无解析'}</div></div>
-                    <div class="tutor-rat-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">🔍 查看官方依据原文 ▼</div>
-                    <div class="tutor-rat-content">${item.rationale || '无官方原文'}</div>
-                    <button class="btn btn-understood" onclick="markUnderstood(this, '${safeQ}')">✔ 彻底顿悟，消灭错题</button>
-                `; container.appendChild(card);
+                card.innerHTML = `${matHtml} <div class="tutor-q">${parsed.question}</div> ${optionsHtml}<div class="tutor-exp-box"><div class="tutor-exp-title">👨‍🏫 名师点拨</div><div class="tutor-exp-text">${item.explanation || '暂无解析'}</div></div><div class="tutor-rat-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">🔍 查看官方依据原文 ▼</div><div class="tutor-rat-content">${item.rationale || '无官方原文'}</div><button class="btn btn-understood" onclick="markUnderstood(this, '${safeQ}')">✔ 彻底顿悟，消灭错题</button>`; container.appendChild(card);
             });
-            document.getElementById('tutor-input').value = ''; alert("✨ 副本生成成功！请在下方滑动阅读，学会后可一键彻底消灭错题！");
-        } catch(e) { alert("解析失败，请检查复制的内容是否为规范的 JSON 代码！报错：" + e.message); }
+            $('tutor-input').value = ''; alert("✨ 副本生成成功！");
+        } catch(e) { alert("解析失败：" + e.message); }
     };
 
     window.markUnderstood = function(btn, qText) {
         let fp = getFingerprint(qText); let wrongBank = banks['sys_wrong']; if (!wrongBank || !wrongBank.data) return;
-        let initialLen = wrongBank.data.length;
-        wrongBank.data = wrongBank.data.filter(x => getFingerprint(x.question) !== fp);
+        let initialLen = wrongBank.data.length; wrongBank.data = wrongBank.data.filter(x => getFingerprint(x.question) !== fp);
         if(wrongBank.data.length < initialLen) saveBanks(); 
         
-        window.tutorDone++; updateTutorProgress();
-        let card = btn.closest('.tutor-card'); card.classList.add('removing');
+        window.tutorDone++; updateTutorProgress(); let card = btn.closest('.tutor-card'); card.classList.add('removing');
         setTimeout(() => {
-            card.remove(); let container = document.getElementById('tutor-cards-container');
-            if(container.children.length === 0) {
-                container.innerHTML = `<div style="text-align:center; background:#ecfdf5; border: 2px solid #34d399; padding:30px 20px; border-radius:24px; box-shadow:0 10px 30px rgba(16,185,129,0.15); animation: pulse-border 2s infinite;"><div style="font-size: 50px; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(16,185,129,0.4));">🏆</div><div style="color:#065f46; font-size: 20px; font-weight:900; margin-bottom: 8px;">PERFECT CLEAR!</div><div style="color:#0f766e; font-weight:700; font-size: 15px;">本次副本中的错题已被你全数消灭！<br>经验值 +999</div><button class="btn" style="margin-top:20px; background:#059669; color:white; border-color:#059669; border-radius:16px; padding: 12px 24px; font-weight:900;" onclick="Router.closeTutorPage()">返回主城</button></div>`;
-                createParticles();
-            }
+            card.remove(); let container = $('tutor-cards-container');
+            if(container.children.length === 0) { container.innerHTML = `<div class="pc-box"><div class="pc-icon">🏆</div><div class="pc-title">PERFECT CLEAR!</div><div class="pc-desc">本次副本中的错题已被你全数消灭！<br>经验值 +999</div><button class="btn pc-btn" onclick="Router.closeTutorPage()">返回主城</button></div>`; createParticles(); }
         }, 400); 
     };
 
-    // --- 模态框与系统提示 ---
     const SysModal = {
         timer: null,
         show: function(title, desc, isDanger, onConfirm) {
-            document.getElementById('sys-modal').classList.remove('hidden'); document.getElementById('modal-title').innerText = title; document.getElementById('modal-desc').innerHTML = desc;
-            let btnC = document.getElementById('modal-btn-confirm'); let btnCancel = document.getElementById('modal-btn-cancel');
+            $('sys-modal').classList.remove('hidden'); $('modal-title').innerText = title; $('modal-desc').innerHTML = desc;
+            let btnC = $('modal-btn-confirm'); let btnCancel = $('modal-btn-cancel');
             btnCancel.style.display = 'inline-block'; btnC.className = isDanger ? "btn btn-danger" : "btn btn-primary"; btnC.disabled = true; btnCancel.onclick = () => { this.hide(); };
             let cd = 3; btnC.innerText = `强制等待 (${cd}s)`;
             if(this.timer) clearInterval(this.timer);
@@ -673,27 +517,19 @@
             }, 1000);
         },
         alert: function(title, desc) {
-            document.getElementById('sys-modal').classList.remove('hidden'); document.getElementById('modal-title').innerText = title; document.getElementById('modal-desc').innerHTML = desc;
-            let btnC = document.getElementById('modal-btn-confirm'); let btnCancel = document.getElementById('modal-btn-cancel');
+            $('sys-modal').classList.remove('hidden'); $('modal-title').innerText = title; $('modal-desc').innerHTML = desc;
+            let btnC = $('modal-btn-confirm'); let btnCancel = $('modal-btn-cancel');
             btnCancel.style.display = 'none'; btnC.className = "btn btn-primary"; btnC.disabled = false; btnC.innerText = "我知道了";
             if(this.timer) clearInterval(this.timer); btnC.onclick = () => { this.hide(); };
         },
-        hide: function() { document.getElementById('sys-modal').classList.add('hidden'); if(this.timer) clearInterval(this.timer); document.getElementById('modal-btn-cancel').style.display = 'inline-block'; }
+        hide: function() { $('sys-modal').classList.add('hidden'); if(this.timer) clearInterval(this.timer); $('modal-btn-cancel').style.display = 'inline-block'; }
     };
     window.alert = function(msg) { SysModal.alert("系统提示", String(msg).replace(/\n/g, '<br>')); };
 
-    // --- 数据加载与核心环境准备 ---
-    (function migrateOldData() {
-        ['banks', 'global_stats', 'test_mode', 'need_sync', 'fold_state', 'settings_open', 'github_token'].forEach(k => {
-            let oldKey = 'szys_' + k; let newKey = 'exam_' + k;
-            if(localStorage.getItem(oldKey) && !SafeStorage.get(newKey)) SafeStorage.set(newKey, localStorage.getItem(oldKey));
-        });
-    })();
+    (function migrateOldData() { ['banks', 'global_stats', 'test_mode', 'need_sync', 'fold_state', 'settings_open', 'github_token'].forEach(k => { let oldKey = 'szys_' + k; let newKey = 'exam_' + k; if(localStorage.getItem(oldKey) && !SafeStorage.get(newKey)) SafeStorage.set(newKey, localStorage.getItem(oldKey)); }); })();
 
-    // 【重构】使用公用初始化函数，确保数据结构绝对纯净
     let banks = ensureSystemBanks(JSON.parse(SafeStorage.get('exam_banks') || '{}'));
     let globalStats = ensureGlobalStats(JSON.parse(SafeStorage.get('exam_global_stats') || 'null'));
-    
     let isTestMode = SafeStorage.get('exam_test_mode') === 'true';
     let needSync = SafeStorage.get('exam_need_sync') === 'true';
     let foldState = JSON.parse(SafeStorage.get('exam_fold_state') || '{"fold-tools":false, "fold-sys":false, "fold-arena":false, "fold-dev":false}');
@@ -706,148 +542,87 @@
 
     window.onload = function() { 
         renderBankList(); updateDashboard(); initUIState(); applyFoldState(); applyQuizSettingsState(); setNeedSync(needSync); 
-        let savedToken = SafeStorage.get('exam_github_token'); if(savedToken) document.getElementById('github-token-input').value = savedToken; 
-        
+        let savedToken = SafeStorage.get('exam_github_token'); if(savedToken) $('github-token-input').value = savedToken; 
         if(isTestMode) {
-            document.getElementById('test-console').classList.remove('hidden');
-            let tBtn = document.getElementById('test-mode-toggle-btn');
-            tBtn.innerText = "关闭测试模式 (将核爆清空所有假数据)"; tBtn.className = "btn btn-danger";
-            document.getElementById('btn-cloud-backup').disabled = true; document.getElementById('btn-cloud-restore').disabled = true;
+            $('test-console').classList.remove('hidden'); let tBtn = $('test-mode-toggle-btn'); tBtn.innerText = "关闭测试模式 (将核爆清空所有假数据)"; tBtn.className = "btn btn-danger";
+            $('btn-cloud-backup').disabled = true; $('btn-cloud-restore').disabled = true;
         }
-
-        if(SafeStorage.get('exam_last_report')) document.getElementById('recovery-banner').classList.remove('hidden');
+        if(SafeStorage.get('exam_last_report')) $('recovery-banner').classList.remove('hidden');
     };
     
-    // 【重构】解耦渲染暴击。支持跳过 UI 重绘
     function saveBanks(skipUI = false) { SafeStorage.set('exam_banks', JSON.stringify(banks)); setNeedSync(true); if(!skipUI) updateDashboard(); }
     function saveGlobalStats(skipUI = false) { SafeStorage.set('exam_global_stats', JSON.stringify(globalStats)); setNeedSync(true); if(!skipUI) updateDashboard(); }
 
     function setNeedSync(state) {
-        if(isTestMode && state) return; 
-        needSync = state; SafeStorage.set('exam_need_sync', state);
-        ['sync-dot-header', 'sync-dot-btn', 'sync-dot-global'].forEach(id => {
-            let el = document.getElementById(id); if (el) { state ? el.classList.remove('hidden') : el.classList.add('hidden'); }
-        });
+        if(isTestMode && state) return; needSync = state; SafeStorage.set('exam_need_sync', state);
+        ['sync-dot-header', 'sync-dot-btn', 'sync-dot-global'].forEach(id => { let el = $(id); if (el) { state ? el.classList.remove('hidden') : el.classList.add('hidden'); } });
     }
 
-    function applyFoldState() { for(let id in foldState) { if(foldState[id] && document.getElementById(id)) document.getElementById(id).classList.add('open'); } }
+    function applyFoldState() { for(let id in foldState) { if(foldState[id] && $(id)) $(id).classList.add('open'); } }
     function toggleQuizSettings() { isSettingsOpen = !isSettingsOpen; SafeStorage.set('exam_settings_open', isSettingsOpen); applyQuizSettingsState(); }
     function applyQuizSettingsState() {
-        const panel = document.getElementById('quiz-settings-panel'); const btn = document.getElementById('quiz-settings-btn');
+        const panel = $('quiz-settings-panel'); const btn = $('quiz-settings-btn');
         if (isSettingsOpen) { panel.classList.remove('hidden'); btn.innerText = '收起设置 ▲'; btn.style.color = '#64748b'; btn.style.background = '#f1f5f9'; btn.style.borderColor = '#cbd5e1'; } 
         else { panel.classList.add('hidden'); btn.innerText = '⚙️ 展开偏好设置'; btn.style.color = '#3b82f6'; btn.style.background = '#eff6ff'; btn.style.borderColor = '#bfdbfe'; }
     }
     
     function initUIState() { let customCount = 0; for (let id in banks) { if(!banks[id].isSystem) customCount++; } if (customCount > 0) hideImportSection(); else showImportSection(); }
-    function showImportSection() { document.getElementById('import-section-collapsed').classList.add('hidden'); document.getElementById('import-section-expanded').classList.remove('hidden'); }
-    function hideImportSection() { document.getElementById('import-section-collapsed').classList.remove('hidden'); document.getElementById('import-section-expanded').classList.add('hidden'); }
+    function showImportSection() { $('import-section-collapsed').classList.add('hidden'); $('import-section-expanded').classList.remove('hidden'); }
+    function hideImportSection() { $('import-section-collapsed').classList.remove('hidden'); $('import-section-expanded').classList.add('hidden'); }
     
     function updateDashboard() {
-        let totalQ = 0; 
-        for (let id in banks) { if(!banks[id] || typeof banks[id] !== 'object' || !banks[id].data) continue; if(!banks[id].isSystem) totalQ += banks[id].data.length; }
-        document.getElementById('mini-stats-1').innerText = `| 库容 ${totalQ} 题 · 答对 ${globalStats.totalCorrect}`;
+        let totalQ = 0; for (let id in banks) { if(!banks[id] || typeof banks[id] !== 'object' || !banks[id].data) continue; if(!banks[id].isSystem) totalQ += banks[id].data.length; }
+        $('mini-stats-1').innerText = `| 库容 ${totalQ} 题 · 答对 ${globalStats.totalCorrect}`;
         let wrongCount = banks['sys_wrong'] && banks['sys_wrong'].data ? banks['sys_wrong'].data.length : 0;
         let starCount = banks['sys_star'] && banks['sys_star'].data ? banks['sys_star'].data.length : 0;
-        document.getElementById('mini-stats-sys').innerText = `| 错题 ${wrongCount} · 收藏 ${starCount}`;
+        $('mini-stats-sys').innerText = `| 错题 ${wrongCount} · 收藏 ${starCount}`;
         let totalClear = (globalStats.challenge.easy||0) + (globalStats.challenge.normal||0) + (globalStats.challenge.hard||0) + (globalStats.challenge.extreme||0);
-        document.getElementById('mini-stats-2').innerText = `| 累计过关 ${totalClear} 次`;
-        
-        document.getElementById('global-total-q').innerText = totalQ;
-        document.getElementById('global-total-ans').innerText = globalStats.totalAnswered; document.getElementById('global-total-cor').innerText = globalStats.totalCorrect;
-        document.getElementById('honor-easy').innerText = globalStats.challenge.easy || 0; document.getElementById('honor-normal').innerText = globalStats.challenge.normal || 0;
-        document.getElementById('honor-hard').innerText = globalStats.challenge.hard || 0; document.getElementById('honor-extreme').innerText = globalStats.challenge.extreme || 0;
+        $('mini-stats-2').innerText = `| 累计过关 ${totalClear} 次`; $('global-total-q').innerText = totalQ;
+        $('global-total-ans').innerText = globalStats.totalAnswered; $('global-total-cor').innerText = globalStats.totalCorrect;
+        $('honor-easy').innerText = globalStats.challenge.easy || 0; $('honor-normal').innerText = globalStats.challenge.normal || 0;
+        $('honor-hard').innerText = globalStats.challenge.hard || 0; $('honor-extreme').innerText = globalStats.challenge.extreme || 0;
 
         ['easy', 'normal', 'hard', 'extreme'].forEach(mode => {
-            let el = document.getElementById('arena-' + mode); let msgEl = document.getElementById('lock-msg-' + mode);
+            let el = $(`arena-${mode}`); let msgEl = $(`lock-msg-${mode}`);
             let reqQ = UNLOCK_REQS_Q[mode]; let reqC = UNLOCK_REQS_C[mode]; let preReqMode = UNLOCK_PRE[mode];
             let isQLocked = totalQ < reqQ; let isCLocked = globalStats.totalCorrect < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
 
-            if(isQLocked || isCLocked || isPreLocked) {
-                el.classList.add('locked-mode'); let lockReasons = [];
-                if(isPreLocked) lockReasons.push(`需先通关[${PRE_NAMES[preReqMode]}]`);
-                if(isQLocked) lockReasons.push(`库容>${reqQ}`);
-                if(isCLocked) lockReasons.push(`答对>${reqC}`);
-                msgEl.innerHTML = '🔒 锁定: ' + lockReasons.join(' <br> ');
+            if(isQLocked || isCLocked || isPreLocked) { el.classList.add('locked-mode'); let lockReasons = []; if(isPreLocked) lockReasons.push(`需先通关[${PRE_NAMES[preReqMode]}]`); if(isQLocked) lockReasons.push(`库容>${reqQ}`); if(isCLocked) lockReasons.push(`答对>${reqC}`); msgEl.innerHTML = '🔒 锁定: ' + lockReasons.join(' <br> ');
             } else { el.classList.remove('locked-mode'); msgEl.innerText = ''; }
         });
     }
 
-    // --- 沙盒引擎 ---
     const SandboxEngine = {
         toggleTestMode: function() {
-            if (!isTestMode) {
-                let totalQ = 0; for (let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) totalQ += banks[id].data.length; }
+            if (!isTestMode) { let totalQ = 0; for (let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) totalQ += banks[id].data.length; }
                 if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) return alert("⚠️ 无法开启测试模式！\n\n测试模式仅能在【0题库、0进度】纯净状态下开启。");
                 SafeStorage.set('exam_test_mode', 'true'); alert("🔧 沙盒激活！"); location.reload();
-            } else {
-                banks = ensureSystemBanks({}); globalStats = ensureGlobalStats(null);
-                saveBanks(true); saveGlobalStats(true); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false);
-                SafeStorage.set('exam_test_mode', 'false'); alert("✅ 已退出测试模式并恢复纯净环境！"); location.reload();
-            }
+            } else { banks = ensureSystemBanks({}); globalStats = ensureGlobalStats(null); saveBanks(true); saveGlobalStats(true); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false); SafeStorage.set('exam_test_mode', 'false'); alert("✅ 已退出测试模式并恢复纯净环境！"); location.reload(); }
         },
         injectProfessorTutorData: function() {
-            let mockQ1 = { id: "test_q1_"+Date.now(), question: "[材料原文：这是测试材料。]\n针对材料的考法？", options: {A:"甲", B:"乙"}, answer: "B", type: "single", source: "沙盒" };
-            let mockQ2 = { id: "test_q2_"+Date.now(), question: "独立测试题，无材料？", options: {A:"甲", B:"乙"}, answer: "A", type: "single", source: "沙盒" };
+            let mockQ1 = { id: "tq1_"+Date.now(), question: "[材料原文：测试]\n考法？", options: {A:"甲", B:"乙"}, answer: "B", type: "single", source: "沙盒" };
+            let mockQ2 = { id: "tq2_"+Date.now(), question: "独立题？", options: {A:"甲", B:"乙"}, answer: "A", type: "single", source: "沙盒" };
             banks['sys_wrong'].data.push(mockQ1); banks['sys_wrong'].data.push(mockQ2); saveBanks(); renderBankList();
-            let mockJSON = [
-                { original_question: mockQ1.question, my_answer: "A", correct_answer: "B", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "依据原文" },
-                { original_question: mockQ2.question, my_answer: "B", correct_answer: "A", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "未检索" }
-            ];
-            document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2); Router.openTutorPage(); generateTutorCards();
+            let mockJSON = [{ original_question: mockQ1.question, my_answer: "A", correct_answer: "B", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "原文" }, { original_question: mockQ2.question, my_answer: "B", correct_answer: "A", explanation: "🔍 陷阱\n\n🧠 原理\n\n💡 举一反三", rationale: "未检索" }];
+            $('tutor-input').value = JSON.stringify(mockJSON, null, 2); Router.openTutorPage(); generateTutorCards();
         },
-        unlockAllArenas: function() {
-            let dummyData = []; for(let i=0; i<700; i++) { dummyData.push({question: `[沙盒] 假题 ${i}_${Date.now()}`, options: {A:"A", B:"B"}, answer: "A", type: "single", source: "沙盒"}); }
-            banks['test_arena_' + Date.now()] = { name: "🧪 竞技解锁库", data: dummyData, completed: false, maxRate: 0 };
-            globalStats.totalCorrect += 500; globalStats.totalAnswered += 600; globalStats.challenge = { easy:1, normal:1, hard:1, extreme:0 };
-            saveBanks(true); saveGlobalStats(); renderBankList(); alert("✅ 全难度竞技场解锁！");
-        },
-        injectWrongAndStar: function() { /* ... 保持不变 ... */ alert("✅ 注入完成"); },
-        mockInterruptState: function() { /* ... 保持不变 ... */ alert("✅ 注入完成"); },
+        unlockAllArenas: function() { let dummyData = []; for(let i=0; i<700; i++) { dummyData.push({question: `[沙盒] 假题 ${i}_${Date.now()}`, options: {A:"A", B:"B"}, answer: "A", type: "single", source: "沙盒"}); } banks['test_arena_' + Date.now()] = { name: "🧪 竞技解锁库", data: dummyData, completed: false, maxRate: 0 }; globalStats.totalCorrect += 500; globalStats.totalAnswered += 600; globalStats.challenge = { easy:1, normal:1, hard:1, extreme:0 }; saveBanks(true); saveGlobalStats(); renderBankList(); alert("✅ 全难度竞技场解锁！"); },
+        injectWrongAndStar: function() { alert("✅ 注入完成"); }, mockInterruptState: function() { alert("✅ 注入完成"); },
         jumpToResult: function() { App.data = new Array(20).fill({}); App.score = 8; App.wrongList = []; for(let i=1; i<=12; i++) { App.wrongList.push({ id: "wq_"+i, q: `假错题 ${i}`, options: {A:"甲", B:"乙"}, source: "沙盒", my: "B", right: "A", reason: "错" }); } App.isChallenge = false; App.bankId = 'test_bank'; App.isSystemBank = false; showResult(); },
-        injectBanks: function() { /* ... 保持不变 ... */ alert("✅ 注入完成"); },
-        triggerRedDot: function() { setNeedSync(true); alert("🔴 强制点亮！"); },
-        triggerEpicModal: function() { showEpicModal("史诗弹窗", "测试文字"); },
-        resetAllStatsFlow: function() {
-            SysModal.show("🔥 危险：清除进度", "将清空所有大盘及系统题库", true, () => {
-                globalStats = ensureGlobalStats(null); banks['sys_wrong'].data = []; banks['sys_star'].data = [];
-                for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
-                saveBanks(true); saveGlobalStats(); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false); alert("✅ 重置完成"); location.reload();
-            });
-        }
+        injectBanks: function() { alert("✅ 注入完成"); }, triggerRedDot: function() { setNeedSync(true); alert("🔴 强制点亮！"); }, triggerEpicModal: function() { showEpicModal("史诗弹窗", "测试文字"); },
+        resetAllStatsFlow: function() { SysModal.show("🔥 危险：清除进度", "将清空所有大盘及系统题库", true, () => { globalStats = ensureGlobalStats(null); banks['sys_wrong'].data = []; banks['sys_star'].data = []; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } } saveBanks(true); saveGlobalStats(); SafeStorage.remove('exam_state'); SafeStorage.remove('exam_last_report'); setNeedSync(false); alert("✅ 重置完成"); location.reload(); }); }
     };
 
-    // --- 云端与导入导出 ---
-    function showEpicModal(title, desc) { document.getElementById('epic-modal').classList.remove('hidden'); document.getElementById('epic-title').innerText = title; document.getElementById('epic-desc').innerText = desc; }
-    function epicCloudBackupFlow() {
-        document.getElementById('epic-modal').classList.add('hidden');
-        if(isTestMode) return alert("⛔ 沙盒环境严禁上传！");
-        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请填写 GitHub 密钥");
-        executeCloudBackup(token);
-    }
-
-    function cloudBackupFlow() {
-        if(isTestMode) return alert("⛔ 沙盒环境严禁上传！");
-        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！");
-        let hasCustomBanks = false; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) hasCustomBanks = true; }
-        if (!hasCustomBanks && banks['sys_wrong'].data.length === 0 && banks['sys_star'].data.length === 0) return alert("暂无数据备份。");
-        SysModal.show("☁️ 确认备份？", "将覆盖旧云端存档", false, () => { executeCloudBackup(token); });
-    }
-
-    function cloudRestoreFlow() {
-        if(isTestMode) return alert("⛔ 沙盒环境严禁拉取！");
-        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！");
-        SysModal.show("⚠️ 覆盖警告", "本地所有进度将完全被抹除替换！", true, () => { executeCloudRestore(token); });
-    }
+    function showEpicModal(title, desc) { $('epic-modal').classList.remove('hidden'); $('epic-title').innerText = title; $('epic-desc').innerText = desc; }
+    function epicCloudBackupFlow() { $('epic-modal').classList.add('hidden'); if(isTestMode) return alert("⛔ 沙盒严禁上传！"); let token = $('github-token-input').value.trim(); if(!token) return alert("请填写 GitHub 密钥"); executeCloudBackup(token); }
+    function cloudBackupFlow() { if(isTestMode) return alert("⛔ 沙盒严禁上传！"); let token = $('github-token-input').value.trim(); if(!token) return alert("请填写 GitHub 密钥！"); let hasCustomBanks = false; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) hasCustomBanks = true; } if (!hasCustomBanks && banks['sys_wrong'].data.length === 0 && banks['sys_star'].data.length === 0) return alert("暂无数据备份。"); SysModal.show("☁️ 确认备份？", "将覆盖旧云端存档", false, () => { executeCloudBackup(token); }); }
+    function cloudRestoreFlow() { if(isTestMode) return alert("⛔ 沙盒严禁拉取！"); let token = $('github-token-input').value.trim(); if(!token) return alert("请填写 GitHub 密钥！"); SysModal.show("⚠️ 覆盖警告", "本地所有进度将完全被抹除替换！", true, () => { executeCloudRestore(token); }); }
 
     async function executeCloudBackup(token) {
-        SafeStorage.set('exam_github_token', token);
-        let backupPayload = { version: "0.1", banks: banks, state: JSON.parse(SafeStorage.get('exam_state') || 'null'), stats: globalStats };
-        let payloadStr = JSON.stringify(backupPayload);
-        const btn = document.getElementById('btn-cloud-backup'); let oriHtml = btn.innerHTML; btn.innerHTML = "⏳ 加密上传中..."; btn.disabled = true;
-
+        SafeStorage.set('exam_github_token', token); let payloadStr = JSON.stringify({ version: "0.1", banks: banks, state: JSON.parse(SafeStorage.get('exam_state') || 'null'), stats: globalStats });
+        const btn = $('btn-cloud-backup'); let oriHtml = btn.innerHTML; btn.innerHTML = "⏳ 加密上传中..."; btn.disabled = true;
         try {
-            let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
-            if(!res.ok) throw new Error("密钥验证失败");
+            let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }}); if(!res.ok) throw new Error("密钥验证失败");
             let gists = await res.json(); let targetGist = gists.find(g => g.files['exam_backup.json'] || g.files['szys_backup.json']);
             if(targetGist) { await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'exam_backup.json': { content: payloadStr } } }) }); } 
             else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "考试助手备份", public: false, files: { 'exam_backup.json': { content: payloadStr } } }) }); }
@@ -856,85 +631,57 @@
     }
 
     async function executeCloudRestore(token) {
-        SafeStorage.set('exam_github_token', token);
-        const btn = document.getElementById('btn-cloud-restore'); let oriTxt = btn.innerText; btn.innerText = "⏳ 强制拉取中..."; btn.disabled = true;
+        SafeStorage.set('exam_github_token', token); const btn = $('btn-cloud-restore'); let oriTxt = btn.innerText; btn.innerText = "⏳ 强制拉取中..."; btn.disabled = true;
         try {
-            let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
-            if(!res.ok) throw new Error("密钥验证失败");
-            let gists = await res.json(); let targetGist = gists.find(g => g.files['exam_backup.json'] || g.files['szys_backup.json']);
-            if(!targetGist) throw new Error("云端未找到备份数据");
-            
+            let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }}); if(!res.ok) throw new Error("密钥验证失败");
+            let gists = await res.json(); let targetGist = gists.find(g => g.files['exam_backup.json'] || g.files['szys_backup.json']); if(!targetGist) throw new Error("云端未找备份数据");
             let rawUrl = targetGist.files['exam_backup.json'] ? targetGist.files['exam_backup.json'].raw_url : targetGist.files['szys_backup.json'].raw_url;
-            let fileRes = await fetch(rawUrl + (rawUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
-            let importedData = await fileRes.json();
-            
-            // 【重构】使用公用初始化保证拉取后格式绝对纯正
-            if (importedData.banks) {
-                banks = ensureSystemBanks(importedData.banks);
-                globalStats = ensureGlobalStats(importedData.stats);
-                if (importedData.state) { SafeStorage.set('exam_state', JSON.stringify(importedData.state)); } else { SafeStorage.remove('exam_state'); }
-            } else { banks = ensureSystemBanks(importedData); }
-            
+            let importedData = await (await fetch(rawUrl + (rawUrl.includes('?') ? '&' : '?') + 't=' + Date.now())).json();
+            if (importedData.banks) { banks = ensureSystemBanks(importedData.banks); globalStats = ensureGlobalStats(importedData.stats); if (importedData.state) { SafeStorage.set('exam_state', JSON.stringify(importedData.state)); } else { SafeStorage.remove('exam_state'); } } else { banks = ensureSystemBanks(importedData); }
             saveBanks(true); saveGlobalStats(true); setNeedSync(false); alert(`✅ 云端覆盖成功！`); location.reload();
         } catch(e) { alert("❌ 恢复出错：" + e.message); } finally { btn.innerText = oriTxt; btn.disabled = false; }
     }
 
-    function exportLocalData() {
-        let backupPayload = { version: "0.1", banks: banks, state: JSON.parse(SafeStorage.get('exam_state') || 'null'), stats: globalStats };
-        let blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
-        a.download = `考试助手备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    }
-    
+    function exportLocalData() { let blob = new Blob([JSON.stringify({ version: "0.1", banks: banks, state: JSON.parse(SafeStorage.get('exam_state') || 'null'), stats: globalStats })], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = `考试助手备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
     function importLocalData(event) {
         let file = event.target.files[0]; if (!file) return; let reader = new FileReader();
         reader.onload = function(e) {
-            try {
-                let importedData = JSON.parse(e.target.result);
-                // 【重构】导入后自动补全系统缺失结构
-                if (importedData.banks) {
-                    banks = ensureSystemBanks(importedData.banks);
-                    globalStats = ensureGlobalStats(importedData.stats);
-                    if (importedData.state) { SafeStorage.set('exam_state', JSON.stringify(importedData.state)); } else { SafeStorage.remove('exam_state'); }
-                } else { banks = ensureSystemBanks(importedData); }
-                saveBanks(true); saveGlobalStats(); setNeedSync(true); alert(`✅ 本地恢复成功！`); location.reload();
+            try { let importedData = JSON.parse(e.target.result); if (importedData.banks) { banks = ensureSystemBanks(importedData.banks); globalStats = ensureGlobalStats(importedData.stats); if (importedData.state) { SafeStorage.set('exam_state', JSON.stringify(importedData.state)); } else { SafeStorage.remove('exam_state'); } } else { banks = ensureSystemBanks(importedData); } saveBanks(true); saveGlobalStats(); setNeedSync(true); alert(`✅ 本地恢复成功！`); location.reload();
             } catch(err) { alert("文件解析错误。"); }
         }; reader.readAsText(file); event.target.value = '';
     }
 
     function parseInput() {
-        let raw = document.getElementById('data-input').value; if (!raw.trim()) { alert("请粘贴题库数据"); return null; }
-        raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
-        try { 
-            let data = JSON.parse(raw); 
-            if(!Array.isArray(data) || data.length === 0) { alert("必须是非空数组"); return null; }
-            let missing = 0, invalid = 0;
-            data.forEach(q => { if(!q.question || !q.options || q.answer === undefined) { invalid++; } else if(q.answer.trim() === "") { missing++; } });
-            if(invalid > 0) return alert(`❌ 格式错误：${invalid} 题缺字段`), null;
-            if(missing > 0) return alert(`🚨 导入拦截：${missing} 题无答案`), null;
-            return data; 
+        let raw = $('data-input').value; if (!raw.trim()) { alert("请粘贴题库数据"); return null; } raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
+        try { let data = JSON.parse(raw); if(!Array.isArray(data) || data.length === 0) { alert("必须是非空数组"); return null; }
+            let missing = 0, invalid = 0; data.forEach(q => { if(!q.question || !q.options || q.answer === undefined) { invalid++; } else if(q.answer.trim() === "") { missing++; } });
+            if(invalid > 0) return alert(`❌ 格式错误：${invalid} 题缺字段`), null; if(missing > 0) return alert(`🚨 导入拦截：${missing} 题无答案`), null; return data; 
         } catch(e) { alert("JSON 解析失败：" + e.message); return null; }
     }
     
-    function saveNewBank() { let qs = parseInput(); if(!qs) return; let name = document.getElementById('new-bank-name').value.trim(); if(!name) return alert("请命名"); let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs, completed: false, maxRate: 0 }; saveBanks(); renderBankList(); initUIState(); document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = ''; alert(`✅ 保存成功`); }
-    function appendToBank() {
-        let qs = parseInput(); if(!qs) return; let bankId = document.getElementById('exist-bank-select').value; if(!bankId) return alert("请选择题库");
-        if(banks[bankId] && banks[bankId].isSystem) return alert("系统题库不可追加！");
-        let bank = banks[bankId]; let existFps = new Set(bank.data.map(q => getFingerprint(q.question))); let added = 0, dup = 0;
-        qs.forEach(q => { let fp = getFingerprint(q.question); if(!existFps.has(fp)) { bank.data.push(q); existFps.add(fp); added++; } else { dup++; } });
-        bank.completed = false; bank.maxRate = 0; saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; alert(`✅ 新增 ${added} 道，拦截 ${dup} 道重复`);
-    }
+    function saveNewBank() { let qs = parseInput(); if(!qs) return; let name = $('new-bank-name').value.trim(); if(!name) return alert("请命名"); let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs, completed: false, maxRate: 0 }; saveBanks(); renderBankList(); initUIState(); $('data-input').value = ''; $('new-bank-name').value = ''; alert(`✅ 保存成功`); }
+    function appendToBank() { let qs = parseInput(); if(!qs) return; let bankId = $('exist-bank-select').value; if(!bankId) return alert("请选择题库"); if(banks[bankId] && banks[bankId].isSystem) return alert("系统题库不可追加！"); let bank = banks[bankId]; let existFps = new Set(bank.data.map(q => getFingerprint(q.question))); let added = 0, dup = 0; qs.forEach(q => { let fp = getFingerprint(q.question); if(!existFps.has(fp)) { bank.data.push(q); existFps.add(fp); added++; } else { dup++; } }); bank.completed = false; bank.maxRate = 0; saveBanks(); renderBankList(); $('data-input').value = ''; alert(`✅ 新增 ${added} 道，拦截 ${dup} 道重复`); }
     function deleteBank(id) { if(banks[id] && banks[id].isSystem) return alert("系统库不可删除"); if(confirm(`确定删除吗？`)) { delete banks[id]; saveBanks(); if (SafeStorage.get('exam_state') && JSON.parse(SafeStorage.get('exam_state')).bankId === id) SafeStorage.remove('exam_state'); renderBankList(); initUIState();} }
     
+    // 【重构】组件化抽离
+    function buildBankCardHTML(id, b, isSys, hasResume) {
+        let btnTxt = isSys ? (b.data.length===0?'暂无数据':(hasResume?'继续清剿':'开始攻克')) : (hasResume?'继续作答':'开始作答');
+        let btnCls = (b.data.length===0 && isSys) ? 'btn disabled' : (hasResume?'btn-primary':'btn');
+        let metaHtml = isSys ? `<span class="bank-meta-tag">收录 ${b.data.length} 题</span>` : `<span class="bank-meta-tag">共 ${b.data.length} 题</span><span class="bank-meta-tag highlight">★ 最高 ${b.maxRate || 0}%</span>`;
+        let headerRight = isSys ? '' : `<div class="bank-delete-text" onclick="deleteBank('${id}')">删除</div>`;
+        let stamp = (!isSys && b.completed) ? `<div class="stamp-completed">已完成</div>` : '';
+        return `${stamp}<div class="bank-header-row"><div class="bank-title">${b.name}</div>${headerRight}</div><div class="bank-meta-row">${metaHtml}</div><button class="btn ${btnCls}" style="margin-bottom:0; margin-top:4px;" ${b.data.length===0 && isSys?'disabled':''} onclick="startQuiz('${id}', ${hasResume})">${btnTxt}</button>`;
+    }
+
     function renderBankList() {
-        const sysList = document.getElementById('sys-bank-list'); const customList = document.getElementById('bank-list'); const sel = document.getElementById('exist-bank-select');
+        const sysList = $('sys-bank-list'); const customList = $('bank-list'); const sel = $('exist-bank-select');
         sysList.innerHTML = ''; customList.innerHTML = ''; sel.innerHTML = '<option value="">-- 追加至目标题库 --</option>'; let hasCustomBanks = false;
         
         ['sys_wrong', 'sys_star'].forEach(id => {
             let b = banks[id]; if(!b || !b.data) return;
             let div = document.createElement('div'); div.className = `bank-item bank-sys-${b.sysType}`;
-            let savedState = JSON.parse(SafeStorage.get('exam_state') || 'null'); let hasResume = (savedState && savedState.bankId === id);
-            let playBtnTxt = hasResume ? '继续清剿' : '开始攻克'; let playBtnClass = b.data.length === 0 ? 'btn disabled' : (hasResume ? 'btn-primary' : 'btn');
-            div.innerHTML = `<div class="bank-header-row"><div class="bank-title">${b.name}</div></div><div class="bank-meta-row"><span class="bank-meta-tag">收录 ${b.data.length} 题</span></div><button class="btn ${playBtnClass}" style="margin-bottom:0; margin-top:4px;" ${b.data.length===0?'disabled':''} onclick="startQuiz('${id}', ${hasResume})">${b.data.length===0?'暂无数据':playBtnTxt}</button>`; sysList.appendChild(div);
+            let hasResume = (JSON.parse(SafeStorage.get('exam_state') || 'null') && JSON.parse(SafeStorage.get('exam_state') || 'null').bankId === id);
+            div.innerHTML = buildBankCardHTML(id, b, true, hasResume); sysList.appendChild(div);
         });
 
         for (let id in banks) {
@@ -942,263 +689,101 @@
             hasCustomBanks = true; let b = banks[id];
             let opt = document.createElement('option'); opt.value = id; opt.innerText = b.name; sel.appendChild(opt);
             let div = document.createElement('div'); div.className = b.completed ? 'bank-item bank-completed' : 'bank-item';
-            let savedState = JSON.parse(SafeStorage.get('exam_state') || 'null'); let hasResume = (savedState && savedState.bankId === id);
-            let playBtnTxt = hasResume ? '继续作答' : '开始作答'; let playBtnClass = hasResume ? 'btn-primary' : 'btn';
-            div.innerHTML = `${b.completed ? `<div class="stamp-completed">已完成</div>` : ''}<div class="bank-header-row"><div class="bank-title">${b.name}</div><div class="bank-delete-text" onclick="deleteBank('${id}')">删除</div></div><div class="bank-meta-row"><span class="bank-meta-tag">共 ${b.data.length} 题</span><span class="bank-meta-tag highlight">★ 最高 ${b.maxRate || 0}%</span></div><button class="btn ${playBtnClass}" style="margin-bottom:0; margin-top:4px;" onclick="startQuiz('${id}', ${hasResume})">${playBtnTxt}</button>`; customList.appendChild(div);
+            let hasResume = (JSON.parse(SafeStorage.get('exam_state') || 'null') && JSON.parse(SafeStorage.get('exam_state') || 'null').bankId === id);
+            div.innerHTML = buildBankCardHTML(id, b, false, hasResume); customList.appendChild(div);
         }
-        if(!hasCustomBanks) customList.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px; border:2px dashed #cbd5e1; border-radius:16px; font-weight:700;">暂无自定义题库，请点击 [⚙️ 控制面板] 导入</div>';
+        if(!hasCustomBanks) customList.innerHTML = '<div class="msg-empty-box">暂无自定义题库，请点击 [⚙️ 控制面板] 导入</div>';
     }
 
     const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null, optShuffle: false, isCompletedBank: false, isSystemBank: false };
     let timerInterval = null;
-    const DOM = { title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progressFill: document.getElementById('progress-fill'), progressText: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display'), material: document.getElementById('material-container') };
+    const DOM = { title: $('question-text'), opts: $('options-container'), progressFill: $('progress-fill'), progressText: $('progress-text'), feedback: $('feedback-box'), btnAction: $('btn-action'), btnStar: $('btn-star'), timerDisplay: $('timer-display'), material: $('material-container') };
 
-    function saveState() {
-        if(App.isChallenge || isTestMode) return;
-        SafeStorage.set('exam_state', JSON.stringify({ bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining, optShuffle: App.optShuffle }));
-    }
-
-    function preprocessOptions(dataArray, isShuffle) {
-        dataArray.forEach(q => {
-            let dKeys = Object.keys(q.options).sort(); q.optMap = {}; 
-            if (isShuffle) {
-                let oKeys = [...dKeys]; for (let i = oKeys.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]]; }
-                dKeys.forEach((dk, i) => { q.optMap[dk] = oKeys[i]; });
-            } else { dKeys.forEach(dk => { q.optMap[dk] = dk; }); }
-        });
-    }
-
-    // 【核心】AI 注入的 groupId 捆绑逻辑 (绝不删除)
-    function blockShuffle(array) {
-        let independent = [], groups = {};
-        array.forEach(q => { if (q.groupId) { if (!groups[q.groupId]) groups[q.groupId] = []; groups[q.groupId].push(q); } else { independent.push(q); } });
-        let blocks = []; independent.forEach(q => blocks.push([q])); 
-        for (let gid in groups) blocks.push(groups[gid]); 
-        for (let i = blocks.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [blocks[i], blocks[j]] = [blocks[j], blocks[i]]; }
-        let result = []; blocks.forEach(block => result.push(...block)); return result;
-    }
+    function saveState() { if(App.isChallenge || isTestMode) return; SafeStorage.set('exam_state', JSON.stringify({ bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining, optShuffle: App.optShuffle })); }
+    function preprocessOptions(dataArray, isShuffle) { dataArray.forEach(q => { let dKeys = Object.keys(q.options).sort(); q.optMap = {}; if (isShuffle) { let oKeys = [...dKeys]; for (let i = oKeys.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]]; } dKeys.forEach((dk, i) => { q.optMap[dk] = oKeys[i]; }); } else { dKeys.forEach(dk => { q.optMap[dk] = dk; }); } }); }
+    function blockShuffle(array) { let independent = [], groups = {}; array.forEach(q => { if (q.groupId) { if (!groups[q.groupId]) groups[q.groupId] = []; groups[q.groupId].push(q); } else { independent.push(q); } }); let blocks = []; independent.forEach(q => blocks.push([q])); for (let gid in groups) blocks.push(groups[gid]); for (let i = blocks.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [blocks[i], blocks[j]] = [blocks[j], blocks[i]]; } let result = []; blocks.forEach(block => result.push(...block)); return result; }
 
     function launchQuizEngine(config) {
-        closeDrawer(); 
-        App.bankId = config.bankId || null; App.data = config.data; App.isChallenge = config.isChallenge || false; App.challengeDiff = config.challengeDiff || null; App.mode = config.mode || 'instant'; App.isCompletedBank = config.isCompletedBank || false; App.isSystemBank = config.isSystemBank || false;
-        App.optShuffle = document.getElementById('opt-shuffle-cb') ? document.getElementById('opt-shuffle-cb').checked : false;
-
-        if (config.isResume) {
-            let s = config.savedState; App.current = s.current; App.score = s.score; App.wrongList = s.wrongList; App.stars = new Set(s.stars); App.isAnswered = s.isAnswered; App.selected = s.selected; App.timerMode = s.timerMode || false; App.timeRemaining = s.timeRemaining || 0; App.optShuffle = s.optShuffle || false;
-            App.data.forEach(q => { if(!q.optMap) { q.optMap={}; Object.keys(q.options).sort().forEach(k=>q.optMap[k]=k); }});
-        } else {
-            preprocessOptions(App.data, App.optShuffle); App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false; App.timerMode = config.timerMode || false; App.timeRemaining = config.timeRemaining || 0;
-        }
-
-        Router.navigate('page-quiz');
-        document.getElementById('nav-btn-back').innerText = App.isChallenge ? '〈 放弃挑战 (判负)' : '〈 保存并退出'; 
-        document.getElementById('btn-quit').innerText = App.isChallenge ? '投降退出' : '清空重卷';
-        
-        if(App.timerMode) { DOM.timerDisplay.classList.remove('hidden'); startTimerLogic(); } else { DOM.timerDisplay.classList.add('hidden'); }
-        renderQuestion(config.isResume);
+        closeDrawer(); App.bankId = config.bankId || null; App.data = config.data; App.isChallenge = config.isChallenge || false; App.challengeDiff = config.challengeDiff || null; App.mode = config.mode || 'instant'; App.isCompletedBank = config.isCompletedBank || false; App.isSystemBank = config.isSystemBank || false; App.optShuffle = $('opt-shuffle-cb') ? $('opt-shuffle-cb').checked : false;
+        if (config.isResume) { let s = config.savedState; App.current = s.current; App.score = s.score; App.wrongList = s.wrongList; App.stars = new Set(s.stars); App.isAnswered = s.isAnswered; App.selected = s.selected; App.timerMode = s.timerMode || false; App.timeRemaining = s.timeRemaining || 0; App.optShuffle = s.optShuffle || false; App.data.forEach(q => { if(!q.optMap) { q.optMap={}; Object.keys(q.options).sort().forEach(k=>q.optMap[k]=k); }}); } 
+        else { preprocessOptions(App.data, App.optShuffle); App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false; App.timerMode = config.timerMode || false; App.timeRemaining = config.timeRemaining || 0; }
+        Router.navigate('page-quiz'); $('nav-btn-back').innerText = App.isChallenge ? '〈 放弃挑战 (判负)' : '〈 保存并退出'; $('btn-quit').innerText = App.isChallenge ? '投降退出' : '清空重卷';
+        if(App.timerMode) { DOM.timerDisplay.classList.remove('hidden'); startTimerLogic(); } else { DOM.timerDisplay.classList.add('hidden'); } renderQuestion(config.isResume);
     }
 
-    function startChallenge(difficulty) {
-        let reqQ = UNLOCK_REQS_Q[difficulty], reqC = UNLOCK_REQS_C[difficulty], preReqMode = UNLOCK_PRE[difficulty];
-        if(parseInt(document.getElementById('global-total-q').innerText) < reqQ || globalStats.totalCorrect < reqC || (preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false)) return alert(`🔒 挑战受限！`);
-        let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; let req = reqMap[difficulty];
-        let priorityQs = [], priorityFps = new Set();
-        ['sys_wrong', 'sys_star'].forEach(id => { if (banks[id] && banks[id].data) banks[id].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } }); });
-        priorityQs = blockShuffle(priorityQs);
-        let regularQs = []; 
-        for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].data.forEach(q => { if(!priorityFps.has(getFingerprint(q.question))) regularQs.push(q); }); } }
-        let finalQs = [].concat(priorityQs.slice(0, Math.min(priorityQs.length, req)));
-        if (req - finalQs.length > 0) finalQs = finalQs.concat(blockShuffle(regularQs).slice(0, req - finalQs.length));
-        launchQuizEngine({ data: blockShuffle(finalQs), isChallenge: true, challengeDiff: difficulty, mode: 'exam', timerMode: difficulty === 'extreme', timeRemaining: difficulty === 'extreme' ? 90 * 60 : 0 });
-    }
-
-    function startQuiz(bankId, isResume) {
-        let config = { bankId: bankId, isCompletedBank: banks[bankId].completed || false, isSystemBank: banks[bankId].isSystem || false };
-        if (isResume) { config.isResume = true; config.savedState = JSON.parse(SafeStorage.get('exam_state')); config.data = config.savedState.activeData;
-        } else {
-            config.data = JSON.parse(JSON.stringify(banks[bankId].data)); if (document.getElementById('shuffle-cb').checked) config.data = blockShuffle(config.data);
-            config.mode = document.querySelector('input[name="mode"]:checked').value; config.timerMode = document.getElementById('timer-cb').checked; config.timeRemaining = config.timerMode ? (parseInt(document.getElementById('timer-minutes').value) || 30) * 60 : 0;
-        }
-        launchQuizEngine(config);
-    }
-
-    function startTimerLogic() {
-        if(timerInterval) clearInterval(timerInterval); updateTimerUI();
-        timerInterval = setInterval(() => {
-            if(App.timeRemaining > 0) { App.timeRemaining--; updateTimerUI(); if(App.timeRemaining % 5 === 0 && !App.isChallenge) saveState(); } 
-            else { clearInterval(timerInterval); alert(App.isChallenge ? "💀 时间耗尽，挑战失败" : "⏱️ 时间到，系统收卷"); showResult(); }
-        }, 1000);
-    }
+    function startChallenge(difficulty) { let reqQ = UNLOCK_REQS_Q[difficulty], reqC = UNLOCK_REQS_C[difficulty], preReqMode = UNLOCK_PRE[difficulty]; if(parseInt($('global-total-q').innerText) < reqQ || globalStats.totalCorrect < reqC || (preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false)) return alert(`🔒 挑战受限！`); let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; let req = reqMap[difficulty]; let priorityQs = [], priorityFps = new Set(); ['sys_wrong', 'sys_star'].forEach(id => { if (banks[id] && banks[id].data) banks[id].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } }); }); priorityQs = blockShuffle(priorityQs); let regularQs = []; for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].data.forEach(q => { if(!priorityFps.has(getFingerprint(q.question))) regularQs.push(q); }); } } let finalQs = [].concat(priorityQs.slice(0, Math.min(priorityQs.length, req))); if (req - finalQs.length > 0) finalQs = finalQs.concat(blockShuffle(regularQs).slice(0, req - finalQs.length)); launchQuizEngine({ data: blockShuffle(finalQs), isChallenge: true, challengeDiff: difficulty, mode: 'exam', timerMode: difficulty === 'extreme', timeRemaining: difficulty === 'extreme' ? 90 * 60 : 0 }); }
+    function startQuiz(bankId, isResume) { let config = { bankId: bankId, isCompletedBank: banks[bankId].completed || false, isSystemBank: banks[bankId].isSystem || false }; if (isResume) { config.isResume = true; config.savedState = JSON.parse(SafeStorage.get('exam_state')); config.data = config.savedState.activeData; } else { config.data = JSON.parse(JSON.stringify(banks[bankId].data)); if ($('shuffle-cb').checked) config.data = blockShuffle(config.data); config.mode = document.querySelector('input[name="mode"]:checked').value; config.timerMode = $('timer-cb').checked; config.timeRemaining = config.timerMode ? (parseInt($('timer-minutes').value) || 30) * 60 : 0; } launchQuizEngine(config); }
+    function startTimerLogic() { if(timerInterval) clearInterval(timerInterval); updateTimerUI(); timerInterval = setInterval(() => { if(App.timeRemaining > 0) { App.timeRemaining--; updateTimerUI(); if(App.timeRemaining % 5 === 0 && !App.isChallenge) saveState(); } else { clearInterval(timerInterval); alert(App.isChallenge ? "💀 时间耗尽，挑战失败" : "⏱️ 时间到，系统收卷"); showResult(); } }, 1000); }
     function updateTimerUI() { let m = Math.floor(App.timeRemaining / 60).toString().padStart(2, '0'); let s = (App.timeRemaining % 60).toString().padStart(2, '0'); DOM.timerDisplay.innerText = `⏳ ${m}:${s}`; }
     function giveUpQuiz() { if(App.isChallenge) { if(confirm("确定要投降？视为失败！")) { if(timerInterval) clearInterval(timerInterval); location.reload(); } } else { if(confirm("确定清空进度重来？")) { if(timerInterval) clearInterval(timerInterval); SafeStorage.remove('exam_state'); location.reload(); } } }
 
     function renderQuestion(isRestore = false) {
-        if (!isRestore) { App.selected = []; App.isAnswered = false; }
-        const q = App.data[App.current]; 
-        DOM.progressText.innerText = `${App.current + 1} / ${App.data.length}`; DOM.progressFill.style.width = (((App.current) / App.data.length) * 100) + '%';
-        
-        let completedNote = App.isCompletedBank ? `<span style="color:#ef4444; font-size:12px; margin-left:8px;">[已毕业不计入大盘]</span>` : '';
-        let sourceHtml = q.source ? `<span class="source-text">📄 出处：${q.source}</span>` : '';
-        
-        // 【重构】复用提取的解析引擎
-        let parsed = parseMaterialText(q.question);
-        DOM.material.innerHTML = '';
-        if (parsed.hasMaterial) {
-            DOM.material.innerHTML = `<div class="material-box"><div class="material-content collapsed" id="mat-content"><div style="font-weight:900; color:#1e293b; margin-bottom:8px;">📖 阅读材料</div><div style="white-space: pre-wrap; text-align: justify; font-size: 14.5px; font-weight: normal;">${parsed.material}</div></div><div class="material-fade" id="mat-fade"></div><div class="material-toggle" id="mat-toggle" onclick="toggleMaterial(this)">📄 展开阅读 ▼</div></div>`;
-            setTimeout(() => { let content = document.getElementById('mat-content'); if (content && content.scrollHeight <= 100) { document.getElementById('mat-fade').style.display = 'none'; document.getElementById('mat-toggle').style.display = 'none'; content.classList.remove('collapsed'); } }, 50);
-        }
-
+        if (!isRestore) { App.selected = []; App.isAnswered = false; } const q = App.data[App.current]; DOM.progressText.innerText = `${App.current + 1} / ${App.data.length}`; DOM.progressFill.style.width = (((App.current) / App.data.length) * 100) + '%';
+        let completedNote = App.isCompletedBank ? `<span class="sys-msg-err" style="font-size:12px; margin-left:8px;">[已毕业不计入大盘]</span>` : ''; let sourceHtml = q.source ? `<span class="source-text">📄 出处：${q.source}</span>` : '';
+        let parsed = parseMaterialText(q.question); DOM.material.innerHTML = '';
+        if (parsed.hasMaterial) { DOM.material.innerHTML = `<div class="material-box"><div class="material-content collapsed" id="mat-content"><div class="mat-read-title">📖 阅读材料</div><div class="mat-read-text">${parsed.material}</div></div><div class="material-fade" id="mat-fade"></div><div class="material-toggle" id="mat-toggle" onclick="toggleMaterial(this)">📄 展开阅读 ▼</div></div>`; setTimeout(() => { let content = $('mat-content'); if (content && content.scrollHeight <= 100) { $('mat-fade').style.display = 'none'; $('mat-toggle').style.display = 'none'; content.classList.remove('collapsed'); } }, 50); }
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选题' : '单选题'}</span> <span style="font-weight:800;">${parsed.question}</span> ${completedNote} ${sourceHtml}`;
-        
         let isStarred = banks['sys_star'] && banks['sys_star'].data && banks['sys_star'].data.some(x => getFingerprint(x.question) === getFingerprint(q.question));
         DOM.btnStar.innerHTML = isStarred ? '★ 已收藏' : '☆ 收藏本题'; DOM.btnStar.className = isStarred ? 'nav-btn bookmark-btn active' : 'nav-btn bookmark-btn';
-        
-        DOM.opts.innerHTML = '';
-        Object.keys(q.optMap).sort().forEach(dk => { 
-            let oKey = q.optMap[dk]; let btn = document.createElement('button'); btn.className = 'opt-btn'; btn.id = `opt-${oKey}`; 
-            btn.innerHTML = `<span class="opt-letter">${dk}.</span> <span>${q.options[oKey]}</span>`; 
-            btn.onclick = () => selectOpt(oKey, q.type); DOM.opts.appendChild(btn); 
-        });
-        
-        DOM.feedback.classList.add('hidden'); DOM.btnAction.className = "btn btn-primary";
-        DOM.btnAction.innerText = App.mode === 'instant' ? '确认选择' : (App.current === App.data.length - 1 ? (App.isChallenge?'斩杀':'交卷') : '下一题');
-        if (isRestore && App.isAnswered) { restoreFeedback(); } else if (isRestore && App.selected.length > 0) { App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); }); }
-        saveState();
+        DOM.opts.innerHTML = ''; Object.keys(q.optMap).sort().forEach(dk => { let oKey = q.optMap[dk]; let btn = document.createElement('button'); btn.className = 'opt-btn'; btn.id = `opt-${oKey}`; btn.innerHTML = `<span class="opt-letter">${dk}.</span> <span>${q.options[oKey]}</span>`; btn.onclick = () => selectOpt(oKey, q.type); DOM.opts.appendChild(btn); });
+        DOM.feedback.classList.add('hidden'); DOM.btnAction.className = "btn btn-primary"; DOM.btnAction.innerText = App.mode === 'instant' ? '确认选择' : (App.current === App.data.length - 1 ? (App.isChallenge?'斩杀':'交卷') : '下一题');
+        if (isRestore && App.isAnswered) { restoreFeedback(); } else if (isRestore && App.selected.length > 0) { App.selected.forEach(k => { let b = $(`opt-${k}`); if(b) b.classList.add('selected'); }); } saveState();
     }
 
-    // 【重构】DOM 选择器局部寻址
-    function selectOpt(key, type) {
-        if (App.isAnswered) return;
-        if (type === 'single') { App.selected = [key]; DOM.opts.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected')); document.getElementById(`opt-${key}`).classList.add('selected'); } 
-        else { let idx = App.selected.indexOf(key); if (idx > -1) { App.selected.splice(idx, 1); document.getElementById(`opt-${key}`).classList.remove('selected'); } else { App.selected.push(key); document.getElementById(`opt-${key}`).classList.add('selected'); } }
-        saveState();
-    }
-
-    function toggleStar() {
-        const q = App.data[App.current]; const fp = getFingerprint(q.question); let starBank = banks['sys_star'];
-        let isStarred = starBank.data.some(x => getFingerprint(x.question) === fp);
-        if (isStarred) { starBank.data = starBank.data.filter(x => getFingerprint(x.question) !== fp); DOM.btnStar.innerHTML = '☆ 收藏本题'; DOM.btnStar.className = 'nav-btn bookmark-btn';
-        } else { starBank.data.push(cleanQuestionForStorage(q)); DOM.btnStar.innerHTML = '★ 已收藏'; DOM.btnStar.className = 'nav-btn bookmark-btn active'; }
-        saveBanks(); saveState();
-    }
-
-    function handleAction() {
-        const q = App.data[App.current];
-        if (App.mode === 'instant' && !App.isAnswered) { 
-            if (!App.selected.length) return alert("请先做出选择哦"); 
-            App.isAnswered = true; processAnswer(q); showFeedbackUI(q); DOM.btnAction.className = "btn";
-            DOM.btnAction.innerText = App.current === App.data.length - 1 ? '查看练习报告' : '进入下一题'; saveState(); return; 
-        }
-        if (App.mode === 'exam') { if (!App.selected.length && !confirm(App.isChallenge?"挑战中，确定空白跳过吗？":"确定跳过此题吗？")) return; processAnswer(q); }
-        App.current++; App.current >= App.data.length ? showResult() : renderQuestion(false);
-    }
+    function selectOpt(key, type) { if (App.isAnswered) return; if (type === 'single') { App.selected = [key]; DOM.opts.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected')); $(`opt-${key}`).classList.add('selected'); } else { let idx = App.selected.indexOf(key); if (idx > -1) { App.selected.splice(idx, 1); $(`opt-${key}`).classList.remove('selected'); } else { App.selected.push(key); $(`opt-${key}`).classList.add('selected'); } } saveState(); }
+    function toggleStar() { const q = App.data[App.current]; const fp = getFingerprint(q.question); let starBank = banks['sys_star']; let isStarred = starBank.data.some(x => getFingerprint(x.question) === fp); if (isStarred) { starBank.data = starBank.data.filter(x => getFingerprint(x.question) !== fp); DOM.btnStar.innerHTML = '☆ 收藏本题'; DOM.btnStar.className = 'nav-btn bookmark-btn'; } else { starBank.data.push(cleanQuestionForStorage(q)); DOM.btnStar.innerHTML = '★ 已收藏'; DOM.btnStar.className = 'nav-btn bookmark-btn active'; } saveBanks(); saveState(); }
+    function handleAction() { const q = App.data[App.current]; if (App.mode === 'instant' && !App.isAnswered) { if (!App.selected.length) return alert("请先做选择"); App.isAnswered = true; processAnswer(q); showFeedbackUI(q); DOM.btnAction.className = "btn"; DOM.btnAction.innerText = App.current === App.data.length - 1 ? '查看练习报告' : '进入下一题'; saveState(); return; } if (App.mode === 'exam') { if (!App.selected.length && !confirm(App.isChallenge?"挑战中，确定空白跳过吗？":"确定跳过此题吗？")) return; processAnswer(q); } App.current++; App.current >= App.data.length ? showResult() : renderQuestion(false); }
 
     function processAnswer(q) {
-        let myAns = App.selected.sort().join(''), rightAns = q.answer.split('').sort().join(''), isRight = (myAns === rightAns);
-        let fp = getFingerprint(q.question), wrongBank = banks['sys_wrong'];
-        let isStarred = banks['sys_star'] && banks['sys_star'].data && banks['sys_star'].data.some(x => getFingerprint(x.question) === fp);
-        let fpHash = getHash(fp);
-
+        let myAns = App.selected.sort().join(''), rightAns = q.answer.split('').sort().join(''), isRight = (myAns === rightAns); let fp = getFingerprint(q.question), wrongBank = banks['sys_wrong']; let isStarred = banks['sys_star'] && banks['sys_star'].data && banks['sys_star'].data.some(x => getFingerprint(x.question) === fp); let fpHash = getHash(fp);
         if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { if(!globalStats.attempted.includes(fpHash)) { globalStats.attempted.push(fpHash); globalStats.totalAnswered++; } }
-        if (isRight) {
-            App.score++; 
-            if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { if(!globalStats.mastered.includes(fpHash)) { globalStats.mastered.push(fpHash); globalStats.totalCorrect++; } }
-            if(App.bankId === 'sys_wrong') { wrongBank.data = wrongBank.data.filter(x => getFingerprint(x.question) !== fp); saveBanks(); }
-        } else {
-            if (!wrongBank.data.some(x => getFingerprint(x.question) === fp) && !isTestMode) { wrongBank.data.push(cleanQuestionForStorage(q)); saveBanks(true); }
-        }
-        
-        if (!isRight || isStarred) App.wrongList.push({ id: q.id, q: q.question, options: q.options, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
-        if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) saveGlobalStats(true); // 抑制重绘风暴
+        if (isRight) { App.score++; if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { if(!globalStats.mastered.includes(fpHash)) { globalStats.mastered.push(fpHash); globalStats.totalCorrect++; } } if(App.bankId === 'sys_wrong') { wrongBank.data = wrongBank.data.filter(x => getFingerprint(x.question) !== fp); saveBanks(); } } 
+        else { if (!wrongBank.data.some(x => getFingerprint(x.question) === fp) && !isTestMode) { wrongBank.data.push(cleanQuestionForStorage(q)); saveBanks(true); } }
+        if (!isRight || isStarred) App.wrongList.push({ id: q.id, q: q.question, options: q.options, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" }); if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) saveGlobalStats(true);
     }
 
-    // 【重构】DOM 选择器局部寻址
     function showFeedbackUI(q) {
         let myAns = App.selected.sort().join('');
-        DOM.opts.querySelectorAll('.opt-btn').forEach(btn => { 
-            btn.classList.add('locked'); let k = btn.id.replace('opt-', ''); 
-            if (q.answer.includes(k)) btn.classList.add('correct'); else if (myAns.includes(k) && !q.answer.includes(k)) btn.classList.add('wrong'); 
-        });
+        DOM.opts.querySelectorAll('.opt-btn').forEach(btn => { btn.classList.add('locked'); let k = btn.id.replace('opt-', ''); if (q.answer.includes(k)) btn.classList.add('correct'); else if (myAns.includes(k) && !q.answer.includes(k)) btn.classList.add('wrong'); });
         DOM.feedback.classList.remove('hidden');
-        if (myAns === q.answer.split('').sort().join('')) { 
-            DOM.feedback.style.background = '#f0fdf4'; DOM.feedback.style.color = '#166534'; DOM.feedback.style.border = "2px solid #6ee7b7"; DOM.feedback.innerHTML = "✅ 回答完全正确！"; 
-        } else { 
-            let revMap = {}; for(let dk in q.optMap) { revMap[q.optMap[dk]] = dk; }
-            let displayRightAns = q.answer.split('').map(k => revMap[k] || k).sort().join('');
-            DOM.feedback.style.background = '#fef2f2'; DOM.feedback.style.color = '#991b1b'; DOM.feedback.style.border = "2px solid #fecaca"; 
-            DOM.feedback.innerHTML = `❌ 哎呀选错了。正确答案是：<span style="font-size:18px; font-weight:900; margin-left:6px;">${displayRightAns}</span>`; 
-        }
+        if (myAns === q.answer.split('').sort().join('')) { DOM.feedback.style.background = '#f0fdf4'; DOM.feedback.style.color = '#166534'; DOM.feedback.style.border = "2px solid #6ee7b7"; DOM.feedback.innerHTML = "✅ 回答完全正确！"; 
+        } else { let revMap = {}; for(let dk in q.optMap) { revMap[q.optMap[dk]] = dk; } let displayRightAns = q.answer.split('').map(k => revMap[k] || k).sort().join(''); DOM.feedback.style.background = '#fef2f2'; DOM.feedback.style.color = '#991b1b'; DOM.feedback.style.border = "2px solid #fecaca"; DOM.feedback.innerHTML = `❌ 哎呀选错了。正确答案是：<span style="font-size:18px; font-weight:900; margin-left:6px;">${displayRightAns}</span>`; }
     }
-
-    function restoreFeedback() { const q = App.data[App.current]; App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); }); showFeedbackUI(q); DOM.btnAction.className = "btn"; DOM.btnAction.innerText = App.current === App.data.length - 1 ? '查看练习报告' : '进入下一题'; }
-
+    function restoreFeedback() { const q = App.data[App.current]; App.selected.forEach(k => { let b = $(`opt-${k}`); if(b) b.classList.add('selected'); }); showFeedbackUI(q); DOM.btnAction.className = "btn"; DOM.btnAction.innerText = App.current === App.data.length - 1 ? '查看练习报告' : '进入下一题'; }
     function createParticles() { for(let i=0; i<80; i++) { let p = document.createElement('div'); p.className = 'particle'; let colors = ['#f59e0b', '#fbbf24', '#ef4444', '#3b82f6', '#10b981', '#a78bfa']; p.style.background = colors[Math.floor(Math.random() * colors.length)]; p.style.left = (Math.random() * 100) + 'vw'; p.style.top = '100vh'; p.style.animation = `fly ${1 + Math.random()}s cubic-bezier(.25,.46,.45,.94) forwards`; document.body.appendChild(p); setTimeout(() => p.remove(), 2000); } }
 
     function triggerChallengeFeedback(diff, pct) {
-        let box = document.getElementById('challenge-feedback'); let title = document.getElementById('cf-title'); let desc = document.getElementById('cf-desc'); box.className = "";
-        let diffName = PRE_NAMES[diff]; let isEpic = false;
-
-        if (pct < 0.5) {
-            box.classList.add('cf-bronze'); title.innerText = "💀 挑战失败"; title.style.color = "#ef4444"; desc.innerText = `【${diffName}】模式下正确率未达50%，已被淘汰。`;
-        } else {
+        let box = $('challenge-feedback'); let title = $('cf-title'); let desc = $('cf-desc'); box.className = ""; let diffName = PRE_NAMES[diff]; let isEpic = false;
+        if (pct < 0.5) { box.classList.add('cf-bronze'); title.innerText = "💀 挑战失败"; title.style.color = "#ef4444"; desc.innerText = `【${diffName}】模式下正确率未达50%，已被淘汰。`; } 
+        else {
             if(!isTestMode) { globalStats.challenge[diff]++; saveGlobalStats(); }
-            if(pct === 1) {
-                box.classList.add('cf-gold'); title.innerText = "🏆 完美通关！神级操作！"; desc.innerText = `一题未错的碾压局！`;
-                if(diff === 'extreme') { document.body.classList.add('anim-shake'); setTimeout(()=>document.body.classList.remove('anim-shake'), 500); title.classList.add('text-rainbow'); box.classList.add('anim-glow'); createParticles(); isEpic = true; } 
-                else if(diff === 'hard') { box.classList.add('anim-glow'); isEpic = true; } else { isEpic = true; }
-            } else if (pct >= 0.8) { box.classList.add('cf-silver'); title.innerText = "✨ 卓越斩杀！"; desc.innerText = `表现出色，荣誉神殿已刻上勋章！`; if(diff === 'extreme') isEpic = true;
-            } else { box.classList.add('cf-bronze'); title.innerText = "🎉 惊险过关！"; title.style.color = "#059669"; desc.innerText = `达到了及格线。`; }
-        }
-        return isEpic;
+            if(pct === 1) { box.classList.add('cf-gold'); title.innerText = "🏆 完美通关！神级操作！"; desc.innerText = `一题未错的碾压局！`; if(diff === 'extreme') { document.body.classList.add('anim-shake'); setTimeout(()=>document.body.classList.remove('anim-shake'), 500); title.classList.add('text-rainbow'); box.classList.add('anim-glow'); createParticles(); isEpic = true; } else if(diff === 'hard') { box.classList.add('anim-glow'); isEpic = true; } else { isEpic = true; } } 
+            else if (pct >= 0.8) { box.classList.add('cf-silver'); title.innerText = "✨ 卓越斩杀！"; desc.innerText = `表现出色，荣誉神殿已刻上勋章！`; if(diff === 'extreme') isEpic = true; } 
+            else { box.classList.add('cf-bronze'); title.innerText = "🎉 惊险过关！"; title.style.color = "#059669"; desc.innerText = `达到了及格线。`; }
+        } return isEpic;
     }
 
     function showResult() {
-        if(timerInterval) clearInterval(timerInterval); if(!App.isChallenge) SafeStorage.remove('exam_state'); 
-        Router.navigate('page-result');
+        if(timerInterval) clearInterval(timerInterval); if(!App.isChallenge) SafeStorage.remove('exam_state'); Router.navigate('page-result');
         SafeStorage.set('exam_last_report', JSON.stringify({ score: App.score, total: App.data.length, wrongList: App.wrongList, isChallenge: App.isChallenge, challengeDiff: App.challengeDiff, bankId: App.bankId, isSystemBank: App.isSystemBank }));
-
-        let pct = App.score / App.data.length; let pctStr = Math.round(pct * 100);
-        document.getElementById('score-text').innerText = `${App.score} / ${App.data.length} (${pctStr}%)`;
-        let epicTriggered = false; let epicTitle = ""; let epicDesc = "";
-
+        let pct = App.score / App.data.length; let pctStr = Math.round(pct * 100); $('score-text').innerText = `${App.score} / ${App.data.length} (${pctStr}%)`; let epicTriggered = false; let epicTitle = ""; let epicDesc = "";
         if (!App.isChallenge) {
             let completeMsg = "";
-            if(!isTestMode && !App.isSystemBank) {
-                let b = banks[App.bankId]; if (!b.maxRate || pctStr > b.maxRate) b.maxRate = pctStr;
-                if (pctStr === 100 && !b.completed) {
-                    b.completed = true; completeMsg = "<br><span style='color:#ef4444; font-weight:900; font-size:16px;'>🎉 100% 满分毕业！</span>";
-                    epicTriggered = true; epicTitle = `🏆 题库满分毕业`; epicDesc = "完美通关！是否封存进度至云端？";
-                } else if (b.completed) { completeMsg = "<br><span style='color:#64748b;'>（此题库已毕业，本次不增加大盘数值）</span>"; }
-                saveBanks();
-            } else if (App.isSystemBank) { completeMsg = "<br><span style='color:#f59e0b;'>（系统库不计入大盘数据，错题答对已销毁）</span>"; }
-            
-            document.getElementById('result-page-title').innerText = "练习战报"; document.getElementById('challenge-feedback').classList.add('hidden'); 
-            document.getElementById('stat-text').innerHTML = `本次作答 ${App.data.length} 题 | 收录错题 ${App.wrongList.length} 题${completeMsg}`;
-        } else {
-            document.getElementById('result-page-title').innerText = "⚔️ 竞技场战报"; document.getElementById('stat-text').innerText = `本次极限操作：${App.data.length} 题 | 错题已全自动收录`;
-            let isEpic = triggerChallengeFeedback(App.challengeDiff, pct);
-            if(isEpic) { epicTriggered = true; epicTitle = `🔥 竞技场无上荣耀`; epicDesc = "强烈建议您立即将这份荣耀永远封存于云端！"; }
-        }
-        renderChunks();
-        if(epicTriggered && !isTestMode) { setTimeout(() => { showEpicModal(epicTitle, epicDesc); }, 1200); }
+            if(!isTestMode && !App.isSystemBank) { let b = banks[App.bankId]; if (!b.maxRate || pctStr > b.maxRate) b.maxRate = pctStr; if (pctStr === 100 && !b.completed) { b.completed = true; completeMsg = "<br><span class='sys-msg-err'>🎉 100% 满分毕业！</span>"; epicTriggered = true; epicTitle = `🏆 题库满分毕业`; epicDesc = "完美通关！是否封存进度至云端？"; } else if (b.completed) { completeMsg = "<br><span class='sys-msg-muted'>（此题库已毕业，本次不增加大盘数值）</span>"; } saveBanks();
+            } else if (App.isSystemBank) { completeMsg = "<br><span class='sys-msg-warn'>（系统库不计入大盘数据，错题答对已销毁）</span>"; }
+            $('result-page-title').innerText = "练习战报"; $('challenge-feedback').classList.add('hidden'); $('stat-text').innerHTML = `本次作答 ${App.data.length} 题 | 收录错题 ${App.wrongList.length} 题${completeMsg}`;
+        } else { $('result-page-title').innerText = "⚔️ 竞技场战报"; $('stat-text').innerText = `本次极限操作：${App.data.length} 题 | 错题已全自动收录`; let isEpic = triggerChallengeFeedback(App.challengeDiff, pct); if(isEpic) { epicTriggered = true; epicTitle = `🔥 竞技场无上荣耀`; epicDesc = "强烈建议您立即将这份荣耀永远封存于云端！"; } }
+        renderChunks(); if(epicTriggered && !isTestMode) { setTimeout(() => { showEpicModal(epicTitle, epicDesc); }, 1200); }
     }
 
-    function restoreLastReport() {
-        let snapshotStr = SafeStorage.get('exam_last_report'); if(!snapshotStr) return; let snapshot = JSON.parse(snapshotStr);
-        App.score = snapshot.score; App.data = new Array(snapshot.total); App.wrongList = snapshot.wrongList; App.isChallenge = snapshot.isChallenge; App.challengeDiff = snapshot.challengeDiff; App.bankId = snapshot.bankId; App.isSystemBank = snapshot.isSystemBank;
-        Router.navigate('page-result');
-        document.getElementById('score-text').innerText = `${App.score} / ${snapshot.total} (${Math.round((App.score / snapshot.total) * 100)}%)`;
-        document.getElementById('result-page-title').innerText = App.isChallenge ? "⚔️ 竞技场战报 (快照)" : "练习战报 (快照)";
-        document.getElementById('stat-text').innerHTML = App.isChallenge ? `极限操作 ${snapshot.total} 题` : `作答 ${snapshot.total} 题 <br><span style='color:#f59e0b;'>（本地快照驻留，大盘数据已安全记录）</span>`;
-        document.getElementById('challenge-feedback').classList.add('hidden'); renderChunks();
-    }
-    function dismissLastReport() { SafeStorage.remove('exam_last_report'); document.getElementById('recovery-banner').classList.add('hidden'); }
+    function restoreLastReport() { let snapshotStr = SafeStorage.get('exam_last_report'); if(!snapshotStr) return; let snapshot = JSON.parse(snapshotStr); App.score = snapshot.score; App.data = new Array(snapshot.total); App.wrongList = snapshot.wrongList; App.isChallenge = snapshot.isChallenge; App.challengeDiff = snapshot.challengeDiff; App.bankId = snapshot.bankId; App.isSystemBank = snapshot.isSystemBank; Router.navigate('page-result'); $('score-text').innerText = `${App.score} / ${snapshot.total} (${Math.round((App.score / snapshot.total) * 100)}%)`; $('result-page-title').innerText = App.isChallenge ? "⚔️ 竞技场战报 (快照)" : "练习战报 (快照)"; $('stat-text').innerHTML = App.isChallenge ? `极限操作 ${snapshot.total} 题` : `作答 ${snapshot.total} 题 <br><span class='sys-msg-warn'>（本地快照驻留，大盘数据已安全记录）</span>`; $('challenge-feedback').classList.add('hidden'); renderChunks(); }
+    function dismissLastReport() { SafeStorage.remove('exam_last_report'); $('recovery-banner').classList.add('hidden'); }
     function clearReportAndReload() { SafeStorage.remove('exam_last_report'); location.reload(); }
 
     function renderChunks() {
-        const container = document.getElementById('chunks-container'); container.innerHTML = '';
-        if (App.wrongList.length === 0) { container.innerHTML = "<div class='chunk-box' style='text-align:center; color:#10b981; background:#ecfdf5; border-color:#6ee7b7;'>✨ 恭喜，本次练习全对，完美通关！</div>"; return; }
-        let chunkSize = parseInt(document.getElementById('chunk-size-input').value) || 5; if (chunkSize < 1) chunkSize = 1;
+        const container = $('chunks-container'); container.innerHTML = '';
+        if (App.wrongList.length === 0) { container.innerHTML = "<div class='chunk-box msg-success-box'>✨ 恭喜，本次练习全对，完美通关！</div>"; return; }
+        let chunkSize = parseInt($('chunk-size-input').value) || 5; if (chunkSize < 1) chunkSize = 1;
         for (let i = 0, batch = 1; i < App.wrongList.length; i += chunkSize, batch++) {
             let chunk = App.wrongList.slice(i, i + chunkSize); 
             let text = `【考试助手 - 错题深度解析请求 (第 ${batch} 批)】\n请作为我的专属导师，结合出处文件，严格按结构为我深度解析以下错题：\n\n`;
@@ -1212,7 +797,7 @@
             container.appendChild(div);
         }
     }
-    window.copyRpt = function(idx) { navigator.clipboard.writeText(document.getElementById(`txt-${idx}`).value).then(() => alert(`✅ 内容已成功复制！`)); }
+    window.copyRpt = function(idx) { navigator.clipboard.writeText($(`txt-${idx}`).value).then(() => alert(`✅ 内容已成功复制！`)); }
 </script>
 </body>
 </html>
